@@ -1,24 +1,16 @@
 # Protokoll-Manager BE
 
-Portfolio-Version einer Webanwendung zur Erfassung und Verwaltung von Gesprächs- und Besprechungsprotokollen.
+Webanwendung zur Erfassung und Verwaltung von Gesprächs- und Besprechungsprotokollen.
 
-Dieses Repository ist eine **öffentliche Demo-Variante** für Bewerbungen und Code-Reviews. Es enthält **fiktive Demo-Daten** und **keine Betriebskonfiguration** aus einem realen Firmeneinsatz.
+Öffentliche **Portfolio-Version** mit fiktiven Demo-Daten (andere Zugangsdaten und `SECRET_KEY` als die Betriebsversion).
 
-## Highlights
-
-- **Full-Stack:** React 19 + Vite + Tailwind im Frontend, Flask + SQLAlchemy + SQLite im Backend
-- **Rollen & Sitzungen:** Login, Session-Timeout, rollenbasierte Bereiche
-- **Protokoll-Workflow:** Anlegen, Bearbeiten (72-h-Regel), Kommentare, Aufgaben, PDF-Export
-- **Stammdaten:** Organisationen, Personen, Projekte, Prozessstrukturen
-- **Backup/Import:** SQLite-Backup über die Oberfläche
-
-## Tech-Stack
+## Technik
 
 | Teil | Technologie |
 |------|-------------|
-| Backend | Python 3.11+, Flask, SQLAlchemy, Waitress |
-| Frontend | React 19, Vite, Tailwind CSS, Framer Motion |
-| Datenbank | SQLite |
+| Backend | Python 3.11+, Flask, SQLAlchemy, SQLite |
+| Frontend | React 19, Vite, Tailwind CSS |
+| Produktion | Waitress, statisches `frontend/dist` |
 
 ## Schnellstart (Entwicklung)
 
@@ -28,7 +20,6 @@ cd backend
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-python seed.py
 python app.py
 
 # Frontend (zweites Terminal)
@@ -37,45 +28,51 @@ npm install
 npm run dev
 ```
 
-- App: http://localhost:5173  
+- Anwendung: http://localhost:5173  
 - API: http://127.0.0.1:5000  
 
-### Demo-Zugang (nach `python seed.py`)
+Demo-Login (nach `INSTALL.bat` oder `python seed.py`): Benutzer `demo`, Passwort `Demo2026!`
 
-| Benutzer | Passwort | Rolle |
-|----------|----------|-------|
-| `demo` | `Demo2026!` | Benutzer |
-| `demo_admin` | `Demo2026!` | Administrator |
+## Produktion (Firmennetz, Firmen-PC als Host)
 
-Weitere Demo-Benutzer: `alice`, `bob`, `carol`, `dave` (gleiches Passwort).
+1. `INSTALL.bat` — installiert bei Bedarf Python und Node.js per **winget**, richtet venv ein, baut das Frontend  
+2. `START.bat` — Anwendung auf dem **Host-PC** im Firmennetz  
 
-## Produktion (lokal testen)
+Nur Frontend nachziehen (nach Code-Änderungen): `BUILD-FRONTEND.bat`  
+Installation rückgängig: `DEINSTALL.bat` (Datenbank bleibt erhalten)
 
-1. `INSTALL.bat` – richtet Python-Umgebung ein und baut das Frontend  
-2. `SECRET_KEY` setzen (Pflicht), dann `START.bat`  
-   - Beispiel: `START.bat.example`  
-   - Oder: `set SECRET_KEY=ihr-eigener-schluessel` vor dem Start  
+Details: **`EINRICHTUNG.md`**
 
-```powershell
-set SECRET_KEY=mein-geheimer-schluessel
-START.bat
-```
+## Dokumentation
 
-## Projektstruktur
+Übersicht aller Ordner: **`docs/README.md`**
+
+| Ordner / Datei | Inhalt |
+|----------------|--------|
+| `EINRICHTUNG.md` | Installation, Betrieb, Backup, Wiederherstellung |
+| `docs/entwicklungsdoku/` | Entwicklung, Architektur, Codebeispiele |
+| `docs/git-doku/` | Git-Workflow |
+| `frontend/public/benutzerhandbuch/` | Endanwender-Handbuch (läuft in der App) |
+| `frontend/public/entwicklerdokumentation/` | Entwickler-Handbuch (Rolle Developer) |
+
+## Projektstruktur (kurz)
 
 ```text
-backend/          Flask-API, Modelle, Migration, Seed
+backend/          Flask-API, Datenbank, Migration, seed
 frontend/src/     React-Oberfläche
-frontend/public/  Benutzer- und Entwicklerhandbuch (statisch)
-docs/             Entwicklungsdokumentation
+frontend/dist/    Produktions-Build (nach npm run build)
+docs/             siehe docs/README.md
 ```
 
-## Hinweise
+## Skripte
 
-- **Keine echten Firmendaten** – alle Organisationen und Benutzer sind fiktiv.
-- **`SECRET_KEY` nie committen** – siehe `.env.example`.
-- Datenbank (`protokoll.db`) wird lokal erzeugt und ist nicht im Repository.
+| Datei | Funktion |
+|-------|----------|
+| `INSTALL.bat` | winget (Python/Node), venv, pip, ggf. seed, `npm install` + Build |
+| `DEINSTALL.bat` | venv, `node_modules`, `dist` entfernen; DB bleibt |
+| `BUILD-FRONTEND.bat` | nur `npm run build` (Node per winget falls nötig) |
+| `START.bat` | Produktionsserver (setzt Demo-`SECRET_KEY` für Sessions) |
 
-## Lizenz
+## Lizenz / Hinweis
 
-Code zur Portfolio-Darstellung. Demo-Passwörter nur für Testzwecke verwenden.
+Portfolio-Demo mit fiktiven Daten. `SECRET_KEY` optional per Umgebungsvariable überschreiben (Standard in `START.bat`).

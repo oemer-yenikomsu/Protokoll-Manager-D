@@ -16,16 +16,12 @@ if not exist "..\frontend\dist\index.html" (
 
 call venv\Scripts\activate.bat
 
-REM SECRET_KEY muss vor dem Start gesetzt werden (signiert Session-Cookies).
-REM Beispiel: set SECRET_KEY=ihr-eigener-zufaelliger-schluessel
-if not defined SECRET_KEY (
-    echo FEHLER: SECRET_KEY ist nicht gesetzt.
-    echo Bitte in dieser Konsole setzen, z. B.:
-    echo   set SECRET_KEY=ihr-eigener-zufaelliger-schluessel
-    echo Danach START.bat erneut ausfuehren.
-    pause
-    exit /b 1
-)
+REM --- SECRET_KEY (Demo/Portfolio) ---------------------------------------------
+REM Signiert Flask-Session-Cookies - NICHT Benutzername/Passwort.
+REM Anmeldung: demo / Demo2026! (laut EINRICHTUNG.md)
+REM Wert aendern: alle muessen sich neu anmelden, niemand ist gesperrt.
+REM Bereits gesetzte Windows-Umgebungsvariable SECRET_KEY hat Vorrang.
+if not defined SECRET_KEY set SECRET_KEY=BE-Demo-k9Xm2pQ7vR4wN8sT1uY6zA3bC5dE0fG_portfolio-only
 
 REM Optional: Inaktivitaets-Timeout (Standard 30 Minuten):
 REM set SESSION_IDLE_MINUTES=30

@@ -9,7 +9,7 @@ class Config:
         'DATABASE_URL', f'sqlite:///{BASE_DIR}/protokoll.db'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = os.getenv('SECRET_KEY', 'portfolio-dev-only-not-for-production')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-portfolio-demo')
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_HTTPONLY = True
     # Keine dauerhafte Cookie-Laufzeit – Sitzung endet beim Schließen des Browsers (session cookie).
