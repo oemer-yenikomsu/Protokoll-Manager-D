@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entwicklungsanleitung – Protokoll-Manager</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    @page { margin: 2cm; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Calibri, Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      color: #000;
+      background: #f0f0f0;
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+      padding: 0.5rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toolbar button {
+      font-family: inherit;
+      font-size: 10pt;
+      padding: 0.35rem 0.85rem;
+      border: 1px solid #888;
+      background: #fff;
+      cursor: pointer;
+    }
+    .toolbar button:hover { background: #e8e8e8; }
+    .toolbar .hint { font-size: 9pt; color: #555; margin-left: auto; }
+    .page {
+      max-width: 21cm;
+      margin: 1rem auto 2rem;
+      padding: 2cm 2.2cm;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+    #doc h1 { font-size: 18pt; margin: 0 0 12pt; border-bottom: 1pt solid #000; padding-bottom: 6pt; }
+    #doc h2 { font-size: 14pt; margin: 18pt 0 8pt; }
+    #doc h3 { font-size: 12pt; margin: 14pt 0 6pt; }
+    #doc p, #doc li { margin: 0 0 6pt; }
+    #doc ul, #doc ol { margin: 0 0 8pt; padding-left: 1.2cm; }
+    #doc table { border-collapse: collapse; width: 100%; margin: 8pt 0 12pt; font-size: 10pt; }
+    #doc th, #doc td { border: 1pt solid #000; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+    #doc th { background: #f0f0f0; font-weight: bold; }
+    #doc pre, #doc code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 9pt;
+      background: #f5f5f5;
+      border: 1pt solid #ddd;
+    }
+    #doc pre { padding: 8pt; overflow-x: auto; white-space: pre-wrap; margin: 8pt 0; }
+    #doc code { padding: 1pt 3pt; }
+    #doc hr { border: none; border-top: 1pt solid #ccc; margin: 14pt 0; }
+    #doc a { color: #0563c1; }
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none !important; }
+      .page { box-shadow: none; margin: 0; max-width: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <button type="button" id="btnWord">Word-Datei herunterladen</button>
+    <button type="button" id="btnPdf">Als PDF speichern (Drucken)</button>
+    <span class="hint">Nur für Entwicklung — nicht in der Web-App verlinkt</span>
+  </div>
+  <div class="page">
+    <article id="doc"></article>
+  </div>
+  <script id="md-data" type="application/json">"# Protokoll-Manager \u2013 Entwicklungsanleitung\n\nDiese Anleitung beschreibt, wie die Anwendung **Protokoll-Manager** unter Windows 11 entwickelt wird: Architektur, Werkzeuge, Einrichtung und **Codebeispiele der wichtigsten Bausteine**.\n\n**Begleitdokumente:**\n\n| Dokument | Inhalt |\n|----------|--------|\n| `EINRICHTUNG.md` | Installation, Produktion, Backup |\n| `docs/entwicklungsdoku/index.html` | Diese Anleitung als HTML (Word/PDF-Export) |\n| `docs/benutzerdoku/` | Verweis \u2192 Handbuch in der App (`frontend/public/benutzerhandbuch/`) |\n\n**\u00d6ffnen der HTML-Anleitung:** Datei `docs/entwicklungsdoku/index.html` im Explorer (Doppelklick) oder im Editor \u2013 nicht \u00fcber die laufende Web-App.\n\n**HTML aktualisieren** (nach \u00c4nderung an dieser Markdown-Datei):\n\n```powershell\npython docs/entwicklungsdoku/build_html.py\n```\n\n---\n\n## 1. Funktions\u00fcberblick\n\n| Bereich | Kernfunktionen |\n|---------|----------------|\n| **Anmeldung** | Login mit Session-Cookie, Abmeldung, 30-Min-Inaktivit\u00e4t |\n| **Protokolle** | Anlegen, \u00dcbersicht, Detail, Drucken, 72h-Bearbeitungsfrist |\n| **Eintr\u00e4ge** | Gespr\u00e4chseintr\u00e4ge mit Thema, Zuordnung, Teilnehmer, Aufgaben, Kommentare |\n| **Stammdaten** | Organisationen, Personen, Projektarten, Projekte, Schritte, Vorschl\u00e4ge (ab Rolle Mitarbeiter) |\n| **Benutzer** | Rollen-Hierarchie, Benutzerverwaltung, Profil |\n| **Backup** | SQLite-`.db` exportieren/importieren |\n| **Betrieb** | Entwicklung (Vite + Flask); Produktion auf einem **Firmen-PC (Host)** im Firmennetz, Browser auf Clients |\n\nTechnisch: **React-SPA** (Frontend) + **Flask-REST-API** (Backend) + **SQLite** (`protokoll.db`).\n\n---\n\n## 2. Architektur\n\n```\nBrowser (Firmennetz oder localhost)\n  React + Tailwind (frontend/src)\n  fetch('/api/...', { credentials: 'include' })\n        \u2502 HTTP\nFlask (backend/)\n  app.py, auth_routes.py, stammdaten.py, benutzer_routes.py, backup.py\n        \u2502\nSQLite  protokoll.db\n```\n\n**Entwicklung:** Frontend `http://localhost:5173` (Vite), Proxy `/api` \u2192 `http://localhost:5000`.  \n**Produktion:** API + `frontend/dist` auf Port 5000.\n\n---\n\n## 3. Werkzeugkiste \u2013 Windows 11\n\n### 3.1 Pflichtprogramme\n\n| Programm | Zweck | Beschaffung |\n|----------|--------|-------------|\n| Python 3.11+ | Backend, venv | **Produktion:** `INSTALL.bat` installiert per **winget** (`Python.Python.3.11`). **Entwicklung:** https://www.python.org/downloads/ (*Add to PATH*) |\n| Node.js LTS | npm, Vite, Build | **Produktion:** `INSTALL.bat` / `BUILD-FRONTEND.bat` per **winget** (`OpenJS.NodeJS.LTS`). **Entwicklung:** https://nodejs.org/ |\n| Git | Versionskontrolle | https://git-scm.com/download/win |\n| VS Code / Cursor | Editor | https://code.visualstudio.com/ |\n\nFalls winget nicht verf\u00fcgbar ist: Python und Node manuell installieren und in PATH legen \u2014 siehe `EINRICHTUNG.md`. Ein separater Laufzeiten-Ordner au\u00dferhalb des Projekts ist **nicht** Teil der Installationsskripte.\n\n### 3.2 Erg\u00e4nzungen\n\n| Tool | Zweck |\n|------|--------|\n| DB Browser for SQLite | Datenbank pr\u00fcfen |\n| Postman / Thunder Client | API testen |\n| Windows Terminal | Backend + Frontend parallel |\n\n### 3.3 Optional (Anfang)\n\nDocker, PostgreSQL, Redux, TypeScript \u2013 im Projekt nicht erforderlich.\n\n---\n\n## 4. Einrichtung\n\n### 4.1 Projektstruktur\n\n```text\nProtokoll-Manager/\n\u251c\u2500\u2500 backend/\n\u251c\u2500\u2500 frontend/\n\u251c\u2500\u2500 docs/\n\u2502   \u251c\u2500\u2500 projektdokumentation/   # IHK-Projektdoku\n\u2502   \u251c\u2500\u2500 projektpraesentation/   # Pr\u00fcfungsfolien\n\u2502   \u251c\u2500\u2500 entwicklungsdoku/       # diese Anleitung\n\u2502   \u251c\u2500\u2500 benutzerdoku/           # Verweis (Quelle: frontend/public/benutzerhandbuch/)\n\u2502   \u2514\u2500\u2500 git-doku/               # Git-Workflow\n\u251c\u2500\u2500 INSTALL.bat\n\u251c\u2500\u2500 DEINSTALL.bat\n\u251c\u2500\u2500 BUILD-FRONTEND.bat\n\u2514\u2500\u2500 START.bat\n```\n\n### 4.2 Backend\n\n```powershell\ncd backend\npython -m venv venv\n.\\venv\\Scripts\\activate\npip install -r requirements.txt\npython app.py\n```\n\nAPI: `http://127.0.0.1:5000` \u2014 Demo-Daten: `python seed.py` (\u00fcberschreibt leere DB).\n\n### 4.3 Frontend\n\n```powershell\ncd frontend\nnpm install\nnpm run dev\n```\n\nUI: `http://localhost:5173`\n\n### 4.4 Produktion\n\nAuf dem Host-PC (Windows-Firmen-PC):\n\n1. **`INSTALL.bat`** \u2014 winget f\u00fcr Python/Node (ggf. UAC), venv, pip, ggf. `seed.py`, `npm install` + `npm run build`\n2. **`START.bat`** \u2014 Waitress + `frontend/dist` im Firmennetz (Port 5000)\n\nNach Frontend-\u00c4nderungen ohne Neuinstallation: **`BUILD-FRONTEND.bat`**, dann Anwendung neu starten.  \nArtefakte entfernen (DB bleibt): **`DEINSTALL.bat`**.\n\nVollst\u00e4ndig: `EINRICHTUNG.md`.\n\n---\n\n## 5. Entwicklungsreihenfolge (Phasen)\n\n### Vorgehensmodell: iterativ-inkrementell\n\nEs wird **ein Inkrement nach dem anderen** umgesetzt. Nach jedem Inkrement liegt etwas **testbares** vor (API per Postman, UI im Browser, oder beides). So bleibt der Fortschritt nachvollziehbar und Fehler lassen sich auf den zuletzt ge\u00e4nderten Bereich eingrenzen.\n\n**Login, Session und Benutzerverwaltung** kommen **erst in sp\u00e4teren Inkrementen**, wenn die Kernfunktionen des Protokoll-Managers (Datenmodell, Protokoll-CRUD, \u00dcbersicht, Detail, Formular) stabil laufen. In der fr\u00fchen Entwicklungsphase entf\u00e4llt die API-Absicherung vor\u00fcbergehend (oder es wird ein fester Entwicklungsmodus ohne Anmeldung genutzt), damit nicht bei jedem Test und jeder \u00c4nderung erneut angemeldet werden muss.\n\n### Inkremente (empfohlene Reihenfolge)\n\n| Inkrement | Inhalt | Test / Ergebnis |\n|-----------|--------|-----------------|\n| **1** | Flask, `config.py`, SQLite; Modelle **Protokoll**, **Eintrag** (minimal); `seed.py` mit Demo-Protokollen | DB Browser; GET `/api/protokolle` (ohne Auth in der Dev-Phase) |\n| **2** | Weitere Modelle (Person, Organisation, Projektart, Projekt, Schritte, Lookup, \u2026); vollst\u00e4ndiges `seed.py` | Tabellen bef\u00fcllt; alle GET-Endpunkte f\u00fcr Stammdaten und Protokolle |\n| **3** | **CRUD** Protokoll und Eintrag in `app.py` (inkl. Teilnehmer, Lookups anlegen) | Postman: anlegen, lesen, \u00e4ndern, l\u00f6schen |\n| **4** | Vite + React + Tailwind; `api.js`; **\u00dcbersicht** (Liste, einfache Suche) | Browser: Protokolle sichtbar, ohne Login-Schirm |\n| **5** | **Detail** und **Formular** (anlegen/bearbeiten); Navigation `view` in `App.jsx` | End-to-end: Protokoll \u00f6ffnen, bearbeiten, speichern |\n| **6** | Filter/Sortierung, Prozessleiste Aufgaben; **Kommentare**, Aufgabenstatus; **72h-Regel** | Zeitlogik und Filter manuell pr\u00fcfen |\n| **7** | **Stammdaten**-API und -UI (Tabellen bearbeiten/l\u00f6schen) \u2014 zun\u00e4chst ohne Rollen-Gates | Stammdaten-Tab nutzbar |\n| **8** | **Anmeldung**, Session-Cookie, `@app.before_request` f\u00fcr `/api/*`; Login-Seite; API-Schutz aktivieren | Anmelden, danach gleiche UI wie zuvor |\n| **9** | **Rollen** (`roles.py`); Stammdaten nur ab Mitarbeiter; **Benutzerverwaltung**, Profil | Rollen und Men\u00fc sichtbarkeit |\n| **10** | Backup/Import, Inaktivit\u00e4ts-Timeout, Nav-Speicher (`sessionStorage`) | `.db`-Backup; Session-Timeout |\n| **11** | Produktion (`run_production.py`, `BUILD-FRONTEND.bat`, `START.bat`); Handbuch; `INSTALL.bat` | LAN-/WLAN-Zugriff aus dem B\u00fcro |\n\n### Hinweis zur API ohne Login (nur Entwicklung)\n\nIn den Inkrementen **1\u20137** kann der `before_request`-Handler f\u00fcr die API **auskommentiert** oder \u00fcber eine Konfigurationsvariable (`DEV_SKIP_AUTH`) umgangen werden. Ab **Inkrement 8** wird die Absicherung dauerhaft aktiviert \u2014 entspricht dem Zielsystem.\n\n---\n\n## 6. Datenmodell\n\n```\nBenutzer \u2500\u2500 erstellt/bearbeitet \u2500\u2500 Protokoll\nOrganisation \u2500\u2500 Person \u2500\u2500 EintragPerson \u2500\u2500 Eintrag \u2500\u2500 Protokoll\nProjektart \u2500\u2500 Projekt / Prozessschritt / Prozessunterschritt\nLookup (typ, ort, thema, aufgabe)\n```\n\n**Benutzer** = Login (Session, Rolle). **Person** = Gespr\u00e4chsteilnehmer (ohne Passwort).\n\n---\n\n## 7. Backend \u2013 Codebausteine\n\n### 7.1 API-Schutz\n\n```python\n@app.before_request\ndef require_login_for_api():\n    if request.method == 'OPTIONS':\n        return None\n    if not request.path.startswith('/api/'):\n        return None\n    if request.path.startswith('/api/auth/login') or request.path == '/api/auth/config':\n        return None\n    get_current_benutzer_or_401()\n```\n\n### 7.2 Modell Benutzer\n\n```python\nclass Benutzer(db.Model):\n    __tablename__ = 'benutzer'\n    benutzer_id    = db.Column(db.Integer, primary_key=True)\n    benutzername   = db.Column(db.String(100), nullable=False, unique=True)\n    passwort_hash  = db.Column(db.String(255), nullable=False)\n    rolle          = db.Column(db.String(30), nullable=False, default='user')\n```\n\n### 7.3 Login und Session\n\n```python\nestablish_session(user.benutzer_id)\nreturn jsonify({**user.to_dict_public(), **session_auth_meta()})\n```\n\n```python\ndef establish_session(benutzer_id: int) -> None:\n    session.permanent = False\n    session['benutzer_id'] = benutzer_id\n    session['last_activity'] = time.time()\n```\n\n### 7.4 72-Stunden-Regel\n\n```python\ndef is_editable(erstellt_am: datetime) -> bool:\n    return (datetime.utcnow() - erstellt_am) <= timedelta(hours=72)\n```\n\n### 7.5 Rollen\n\n```python\nROLLE_STUFE = {'user': 0, 'mitarbeiter': 1, 'admin': 2, 'developer': 3, 'masterdeveloper': 4}\n```\n\n### 7.7 Produktion\n\n```python\nfrom waitress import serve\nserve(app, host='0.0.0.0', port=5000, threads=4)\n```\n\n---\n\n## 8. Frontend \u2013 Codebausteine\n\n### 8.1 Vite-Proxy\n\n```javascript\nserver: { proxy: { '/api': { target: 'http://localhost:5000' } } }\n```\n\n### 8.2 API mit Cookie\n\n```javascript\nconst fetchOpts = { credentials: 'include' };\nexport const login = (u, p) => post('/auth/login', { benutzername: u, passwort: p });\n```\n\n### 8.3 App-Shell\n\n```jsx\nif (!activeUser) return <Login \u2026 />;\nreturn (/* view: overview | detail | create | \u2026 */);\n```\n\n### 8.4 Rollen im UI\n\n```javascript\nexport function darfStammdaten(rolle) {\n  return ROLLE_STUFE[normalizeRolle(rolle)] >= ROLLE_STUFE.mitarbeiter;\n}\n```\n\n### 8.5 Inaktivit\u00e4t\n\nBackend: `idleSeconds`, `sessionDeadline`. Frontend: Sekundenpr\u00fcfung, Overlay, erneute Anmeldung.\n\n---\n\n## 9. API-\u00dcbersicht\n\n| Methode | Pfad | Beschreibung |\n|---------|------|--------------|\n| POST | `/api/auth/login` | Anmelden |\n| GET | `/api/auth/me` | Aktueller Benutzer |\n| GET | `/api/protokolle` | Protokolle |\n| POST | `/api/protokolle` | Anlegen |\n| GET | `/api/backup/database` | DB-Backup |\n\nVollst\u00e4ndig in `backend/app.py`, `auth_routes.py`, `stammdaten.py`, `benutzer_routes.py`, `backup.py`.\n\n---\n\n## 10. Ordnerstruktur\n\n```text\nbackend/     app.py, models.py, auth_routes.py, session_policy.py, \u2026\nfrontend/src/  App.jsx, api.js, views/, components/, utils/, hooks/\n```\n\n---\n\n## 11. Typische Fehler\n\n| Problem | L\u00f6sung |\n|---------|--------|\n| API 401 | Anmelden; `credentials: 'include'` |\n| CORS | Flask-CORS, Origin `localhost:5173` |\n| Leere \u00dcbersicht | `lookups/all` nur f\u00fcr Mitarbeiter separat laden |\n| Nur Port 5000 | Entwicklung: Port 5173 + `npm run dev` |\n\n---\n\n## 12. Checkliste\n\n- [ ] Inkrement 1\u20133: Backend, Modelle, Protokoll-CRUD (ohne Auth in Dev)\n- [ ] Inkrement 4\u20136: React-UI \u00dcbersicht, Detail, Formular, 72h, Kommentare\n- [ ] Inkrement 7: Stammdaten\n- [ ] Inkrement 8\u20139: Login, Session, Rollen, Benutzerverwaltung\n- [ ] Inkrement 10\u201311: Backup, Produktion, Dokumentation\n\n---\n\n## 13. Nachschlagewerke und Lernquellen\n\nOffizielle Dokumentation als **prim\u00e4re Quelle**; Videos und UI-Bausteine als **Erg\u00e4nzung**.\n\n### 13.1 Backend\n\n| Quelle | URL |\n|--------|-----|\n| Python-Tutorial | https://docs.python.org/3/tutorial/ |\n| Flask | https://flask.palletsprojects.com/en/stable/quickstart/ |\n| Flask-SQLAlchemy | https://flask-sqlalchemy.palletsprojects.com/ |\n| Flask Sessions | https://flask.palletsprojects.com/en/stable/websecurity/#sessions |\n\n### 13.2 Frontend\n\n| Quelle | URL |\n|--------|-----|\n| React | https://react.dev/learn |\n| Vite | https://vite.dev/guide/ |\n| MDN fetch | https://developer.mozilla.org/de/docs/Web/API/Fetch_API |\n\n### 13.3 Tailwind CSS\n\n| Quelle | URL |\n|--------|-----|\n| Dokumentation | https://tailwindcss.com/docs |\n| HyperUI (Bausteine) | https://www.hyperui.dev/ |\n\nIm Projekt nach Klassen wie `rounded-xl`, `bg-violet-600`, `flex` suchen \u2013 Beispiele f\u00fcr das verwendete Styling.\n\n### 13.4 Icons\n\n**Lucide React:** https://lucide.dev/icons/\n\n### 13.5 YouTube (erg\u00e4nzend)\n\nAktuelle Tutorials zu Flask REST API, React Hooks, Vite, Tailwind. Pro Thema ein Video, danach direkt im Projekt umsetzen.\n\n### 13.6 KI (sparsam)\n\nF\u00fcr Fehlermeldungen und kleine Snippets; generierten Code mit offizieller Doku abgleichen.\n"</script>
+  <script>
+    const md = JSON.parse(document.getElementById('md-data').textContent);
+    document.getElementById('doc').innerHTML = marked.parse(md);
+
+    document.getElementById('btnPdf').onclick = () => window.print();
+
+    document.getElementById('btnWord').onclick = () => {
+      const body = document.getElementById('doc').innerHTML;
+      const html = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office"
+        xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="utf-8"><title>Entwicklungsanleitung Protokoll-Manager</title>
+        <style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;}
+        table{border-collapse:collapse;} td,th{border:1px solid #000;padding:4px;}
+        pre,code{font-family:Consolas,monospace;font-size:9pt;background:#f5f5f5;}</style></head>
+        <body>${body}</body></html>`;
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ENTWICKLUNGSANLEITUNG.doc';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entwicklerdokumentation – Protokoll-Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --violet-600: #7c3aed;
+      --violet-700: #6d28d9;
+      --indigo-600: #4f46e5;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-500: #64748b;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --code-bg: #0f172a;
+      --code-fg: #e2e8f0;
+      --sidebar-w: 17rem;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--slate-800);
+      background: var(--slate-50);
+    }
+    a { color: var(--violet-600); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: #fff;
+      border-right: 1px solid var(--slate-200);
+      padding: 1.25rem 0;
+      overflow-y: auto;
+      z-index: 40;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0 1.25rem 1.25rem;
+      border-bottom: 1px solid var(--slate-100);
+      margin-bottom: 0.75rem;
+    }
+    .sidebar-brand .icon-box {
+      background: linear-gradient(135deg, var(--violet-600), var(--indigo-600));
+      color: #fff; padding: 0.45rem; border-radius: 0.6rem;
+    }
+    .sidebar-brand span { font-weight: 800; font-size: 0.95rem; line-height: 1.2; }
+    .sidebar-brand small { display: block; font-weight: 500; color: var(--slate-500); font-size: 0.7rem; }
+    .nav-link {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 1.25rem;
+      font-size: 0.875rem;
+      color: var(--slate-700);
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: #f5f3ff; color: var(--violet-700); text-decoration: none; }
+    .nav-link.active { background: #f5f3ff; color: var(--violet-700); border-left-color: var(--violet-600); font-weight: 600; }
+    .nav-group { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--slate-500); padding: 0.75rem 1.25rem 0.25rem; }
+
+    .main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; }
+    .hero {
+      background: linear-gradient(135deg, var(--slate-900) 0%, var(--violet-700) 100%);
+      color: #fff;
+      padding: 3rem 2.5rem 2.5rem;
+    }
+    .hero h1 { margin: 0 0 0.5rem; font-size: clamp(1.75rem, 4vw, 2.25rem); font-weight: 800; letter-spacing: -0.02em; }
+    .hero p { margin: 0; max-width: 42rem; opacity: 0.92; font-size: 1.05rem; }
+    .hero-meta { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: rgba(255,255,255,0.15); padding: 0.35rem 0.75rem;
+      border-radius: 999px; font-size: 0.8rem; font-weight: 500;
+    }
+
+    .content { padding: 2rem 2.5rem 4rem; max-width: 56rem; }
+    section { margin-bottom: 3rem; }
+    section h2 {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 1.45rem; font-weight: 800; color: var(--slate-800);
+      margin: 0 0 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--slate-200);
+    }
+    section h2 .section-icon {
+      display: inline-flex; padding: 0.4rem;
+      background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+      border-radius: 0.5rem; color: var(--violet-600);
+    }
+    h3 { font-size: 1.1rem; font-weight: 700; margin: 1.5rem 0 0.6rem; color: var(--slate-700); }
+    h4 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.4rem; }
+    p { margin: 0 0 0.85rem; }
+    ul, ol { margin: 0 0 1rem; padding-left: 1.35rem; }
+    li { margin-bottom: 0.35rem; }
+
+    code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85em;
+      background: var(--slate-100);
+      color: var(--slate-800);
+      padding: 0.1rem 0.35rem;
+      border-radius: 0.3rem;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 1rem 1.1rem;
+      border-radius: 0.75rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      margin: 0.75rem 0 1rem;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
+    .code-label {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--slate-100);
+      color: var(--slate-500);
+      padding: 0.15rem 0.55rem;
+      border-radius: 0.35rem 0.35rem 0 0;
+    }
+    .code-label + pre { border-top-left-radius: 0; margin-top: 0; }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 1rem;
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    }
+    .card h4 { margin-top: 0; display: flex; align-items: center; gap: 0.45rem; }
+
+    .box {
+      border-radius: 0.75rem;
+      padding: 0.9rem 1.1rem;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+      display: flex; gap: 0.65rem;
+      align-items: flex-start;
+    }
+    .box-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .box-tip { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .box-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .box strong { display: block; margin-bottom: 0.2rem; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 1rem 0; }
+    th, td { border: 1px solid var(--slate-200); padding: 0.55rem 0.65rem; text-align: left; vertical-align: top; }
+    th { background: var(--slate-100); font-weight: 600; }
+    td.center, th.center { text-align: center; }
+    td code, th code { background: #fff; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .menu-toggle {
+        display: flex; position: fixed; bottom: 1.25rem; right: 1.25rem;
+        z-index: 50; background: var(--violet-600); color: #fff;
+        border: none; border-radius: 50%; width: 3rem; height: 3rem;
+        align-items: center; justify-content: center; cursor: pointer;
+        box-shadow: 0 4px 14px rgba(124,58,237,0.45);
+      }
+      .content { padding: 1.5rem 1.25rem 3rem; }
+      .hero { padding: 2rem 1.25rem; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 901px) { .menu-toggle { display: none; } }
+
+    footer.handbuch-footer {
+      margin-top: 2rem; padding-top: 1.5rem;
+      border-top: 1px solid var(--slate-200);
+      font-size: 0.85rem; color: var(--slate-500);
+    }
+    .handbuch-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: #fff;
+      border-bottom: 1px solid var(--slate-200);
+      padding: 0.5rem 1.25rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-left: var(--sidebar-w);
+    }
+    .handbuch-toolbar button {
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.9rem;
+      border: 1px solid var(--slate-300);
+      border-radius: 0.5rem;
+      background: #fff;
+      color: var(--slate-700);
+      cursor: pointer;
+    }
+    .handbuch-toolbar button:hover {
+      background: #f5f3ff;
+      border-color: var(--violet-600);
+      color: var(--violet-700);
+    }
+    .handbuch-toolbar .hint {
+      font-size: 0.75rem;
+      color: var(--slate-500);
+      margin-left: auto;
+    }
+    @media (max-width: 900px) {
+      .handbuch-toolbar { margin-left: 0; }
+    }
+    @media print {
+      .sidebar, .menu-toggle, .handbuch-toolbar { display: none !important; }
+      .main { margin-left: 0; }
+      .hero { background: #fff; color: var(--slate-800); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      section { break-inside: avoid; page-break-inside: avoid; }
+      pre { break-inside: avoid; page-break-inside: avoid; background: #f5f5f5; color: #000; border: 1px solid #ddd; }
+      body { background: #fff; font-size: 10pt; }
+      .content { padding: 0 1cm; }
+      a { color: #000; text-decoration: none; }
+      @page { margin: 1.5cm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="handbuch-toolbar no-print">
+    <button type="button" id="btnDokuPdf">Als PDF speichern</button>
+    <button type="button" id="btnDokuPrint">Drucken</button>
+    <span class="hint">Im Druckdialog „Als PDF speichern“ wählen (z.&nbsp;B. Microsoft Print to PDF)</span>
+  </div>
+  <button type="button" class="menu-toggle" aria-label="Inhaltsverzeichnis" id="menuToggle">
+    <i data-lucide="menu"></i>
+  </button>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="icon-box"><i data-lucide="code-2" style="width:20px;height:20px"></i></div>
+        <div>
+          <span>Protokoll-Manager</span>
+          <small>Entwicklerdokumentation</small>
+        </div>
+      </div>
+      <div class="nav-group">Überblick</div>
+      <a class="nav-link" href="#einfuehrung"><i data-lucide="home" style="width:16px;height:16px"></i> Einführung</a>
+      <a class="nav-link" href="#architektur"><i data-lucide="layers" style="width:16px;height:16px"></i> Architektur</a>
+      <a class="nav-link" href="#projektstruktur"><i data-lucide="folder-tree" style="width:16px;height:16px"></i> Projektstruktur</a>
+      <div class="nav-group">Entwicklung</div>
+      <a class="nav-link" href="#setup"><i data-lucide="terminal" style="width:16px;height:16px"></i> Setup &amp; Build</a>
+      <a class="nav-link" href="#frontend"><i data-lucide="monitor" style="width:16px;height:16px"></i> Frontend</a>
+      <a class="nav-link" href="#backend"><i data-lucide="server" style="width:16px;height:16px"></i> Backend / API</a>
+      <a class="nav-link" href="#datenmodell"><i data-lucide="database" style="width:16px;height:16px"></i> Datenmodell</a>
+      <div class="nav-group">Regeln</div>
+      <a class="nav-link" href="#auth"><i data-lucide="shield-check" style="width:16px;height:16px"></i> Auth &amp; Rollen</a>
+      <a class="nav-link" href="#frist72"><i data-lucide="clock" style="width:16px;height:16px"></i> 72-Stunden-Regel</a>
+      <div class="nav-group">Betrieb</div>
+      <a class="nav-link" href="#deployment"><i data-lucide="rocket" style="width:16px;height:16px"></i> Deployment</a>
+      <a class="nav-link" href="#backup"><i data-lucide="hard-drive" style="width:16px;height:16px"></i> Backup &amp; Migration</a>
+      <a class="nav-link" href="#faq"><i data-lucide="help-circle" style="width:16px;height:16px"></i> FAQ Entwickler</a>
+      <div style="padding:1rem 1.25rem 0;font-size:0.8rem;">
+        <a href="/">← Zur Anwendung</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <h1>Entwicklerdokumentation</h1>
+        <p>Technische Übersicht zum Protokoll-Manager: Architektur, Module, API, Datenmodell, Geschäftsregeln und Betrieb. Für Entwickler und Master-Developer.</p>
+        <div class="hero-meta">
+          <span class="hero-pill"><i data-lucide="server" style="width:14px;height:14px"></i> Python / Flask</span>
+          <span class="hero-pill"><i data-lucide="monitor" style="width:14px;height:14px"></i> React / Tailwind</span>
+          <span class="hero-pill"><i data-lucide="database" style="width:14px;height:14px"></i> SQLite / SQLAlchemy</span>
+          <span class="hero-pill"><i data-lucide="book-open" style="width:14px;height:14px"></i> Stand: Mai 2026</span>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <section id="einfuehrung">
+          <h2><span class="section-icon"><i data-lucide="home"></i></span> Einführung</h2>
+          <p>Der <strong>Protokoll-Manager</strong> ist eine interne Webanwendung zur Erfassung und Verwaltung von Gesprächsprotokollen. Diese Dokumentation richtet sich an Entwickler, die das System pflegen oder erweitern, und ist erst ab Rolle <code>developer</code> in der App sichtbar.</p>
+          <div class="box box-info">
+            <i data-lucide="info"></i>
+            <div>
+              <strong>Schwerpunkt</strong>
+              Geschäftsregeln (insbesondere die 72-Stunden-Bearbeitungsfrist) werden serverseitig durchgesetzt. Das Frontend spiegelt sie nur zur besseren Bedienung.
+            </div>
+          </div>
+        </section>
+
+        <section id="architektur">
+          <h2><span class="section-icon"><i data-lucide="layers"></i></span> Architektur</h2>
+          <p>Drei klar getrennte Schichten:</p>
+          <table>
+            <thead><tr><th>Schicht</th><th>Technologie</th><th>Aufgabe</th></tr></thead>
+            <tbody>
+              <tr><td>Frontend (SPA)</td><td>React, Vite, Tailwind CSS</td><td>Oberfläche, lokaler Zustand, API-Aufrufe</td></tr>
+              <tr><td>Backend</td><td>Python, Flask, SQLAlchemy, Waitress</td><td>REST-API, Geschäftsregeln, Authentifizierung</td></tr>
+              <tr><td>Datenhaltung</td><td>SQLite (Datei <code>protokoll.db</code>)</td><td>Persistenz, idempotente Schema-Migration</td></tr>
+            </tbody>
+          </table>
+          <p>Im Entwicklungsmodus laufen Vite (Port 5173) und Flask (Port 5000) parallel, das Vite-Proxy leitet <code>/api/*</code> an Flask weiter. Im Produktivmodus liefert ein einzelner Flask/Waitress-Prozess sowohl die API als auch das gebaute Frontend aus <code>frontend/dist</code> aus.</p>
+        </section>
+
+        <section id="projektstruktur">
+          <h2><span class="section-icon"><i data-lucide="folder-tree"></i></span> Projektstruktur</h2>
+          <pre><code>Protokoll-Manager/
+├── backend/
+│   ├── app.py                 # Routen + 72-h-Logik + before_request-Hook
+│   ├── auth_routes.py         # Login, Logout, /api/auth/me
+│   ├── benutzer_routes.py     # Profil &amp; Benutzerverwaltung
+│   ├── roles.py               # Rollenstufen &amp; Rechtematrix
+│   ├── session_policy.py      # Cookie-Sitzung, Idle-Ablauf
+│   ├── stammdaten.py          # Endpoints für Stammdaten
+│   ├── backup.py              # Backup &amp; Import der DB
+│   ├── models.py              # SQLAlchemy-Modelle
+│   ├── schema_migrate.py      # Idempotente Migration
+│   ├── config.py              # Konfiguration / Env
+│   ├── run_production.py      # Waitress-Start im Firmennetz
+│   └── protokoll.db           # SQLite-Datenbank
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx            # Globaler Zustand, Menü
+│   │   ├── api.js             # fetch-Wrapper, credentials: 'include'
+│   │   ├── views/             # Overview, Detail, ProtocolForm, Login, …
+│   │   ├── components/        # UIComponents, TeilnehmerBlock, …
+│   │   ├── hooks/             # useIdleSession
+│   │   ├── utils/             # roles, projektart, navStorage, …
+│   │   └── constants/         # session, URLs
+│   ├── public/
+│   │   ├── benutzerhandbuch/  # In-App-Handbuch (alle Benutzer)
+│   │   └── entwicklerdokumentation/ # diese Seite
+│   └── dist/                  # Build-Ergebnis (npm run build)
+└── docs/                      # siehe docs/README.md
+    ├── projektdokumentation/  # IHK-Doku
+    ├── entwicklungsdoku/
+    ├── projektpraesentation/
+    ├── benutzerdoku/
+    └── git-doku/</code></pre>
+        </section>
+
+        <section id="setup">
+          <h2><span class="section-icon"><i data-lucide="terminal"></i></span> Setup &amp; Build</h2>
+
+          <h3>Entwicklungsumgebung</h3>
+          <span class="code-label">Backend</span>
+<pre><code>cd backend
+python -m venv .venv
+.venv\Scripts\activate         # Windows
+pip install -r requirements.txt
+python app.py                  # http://localhost:5000</code></pre>
+
+          <span class="code-label">Frontend</span>
+<pre><code>cd frontend
+npm install
+npm run dev                    # http://localhost:5173</code></pre>
+
+          <h3>Produktiver Build</h3>
+<pre><code>cd frontend && npm run build   # erzeugt frontend/dist
+cd ../backend && python run_production.py
+# Lokal:        http://127.0.0.1:5000
+# Firmennetz:   http://&lt;Host-IP&gt;:5000</code></pre>
+          <div class="box box-tip">
+            <i data-lucide="check-circle"></i>
+            <div>
+              <strong>Voraussetzung</strong>
+              Vor dem Produktivstart muss <code>frontend/dist</code> existieren. <code>run_production.py</code> bricht andernfalls mit Hinweis ab.
+            </div>
+          </div>
+        </section>
+
+        <section id="frontend">
+          <h2><span class="section-icon"><i data-lucide="monitor"></i></span> Frontend</h2>
+          <p>Single-Page-Anwendung auf React-Basis. Der globale Zustand (geladene Tabellen, Filter, Auswahl) liegt in <code>App.jsx</code>; die einzelnen Bildschirme sind eigene Komponenten unter <code>src/views/</code>.</p>
+
+          <table>
+            <thead><tr><th>Modul</th><th>Inhalt</th></tr></thead>
+            <tbody>
+              <tr><td><code>App.jsx</code></td><td>State, Menü, Routing-Logik, Idle-Hook</td></tr>
+              <tr><td><code>views/Overview.jsx</code></td><td>Liste, Suche, Filter, Aufgaben-Prozessleiste</td></tr>
+              <tr><td><code>views/Detail.jsx</code></td><td>Detailansicht, Kommentare, Aufgabenstatus, Druck</td></tr>
+              <tr><td><code>views/ProtocolForm.jsx</code></td><td>Anlegen/Bearbeiten von Protokoll &amp; Einträgen</td></tr>
+              <tr><td><code>views/Stammdaten.jsx</code></td><td>Stammdaten-CRUD (ab Mitarbeiter)</td></tr>
+              <tr><td><code>views/Login.jsx</code>, <code>UserProfile.jsx</code>, <code>UserManagement.jsx</code></td><td>Auth, Profil, Benutzerverwaltung</td></tr>
+              <tr><td><code>api.js</code></td><td>fetch-Wrapper mit <code>credentials: 'include'</code></td></tr>
+              <tr><td><code>hooks/useIdleSession.js</code></td><td>Automatische Abmeldung bei Inaktivität</td></tr>
+              <tr><td><code>utils/roles.js</code></td><td>Rollenstufen, Rechte-Helfer</td></tr>
+            </tbody>
+          </table>
+
+          <h3>API-Aufrufe</h3>
+<pre><code>const fetchOpts = { credentials: 'include' };
+
+async function parseJsonResponse(r) {
+  const data = await r.json().catch(() =&gt; ({}));
+  if (!r.ok) {
+    const err = new Error(data.message || data.description || `HTTP ${r.status}`);
+    err.status = r.status;
+    throw err;
+  }
+  return data;
+}</code></pre>
+          <p>Alle Schreib- und Lesezugriffe gehen über zentrale Helfer (<code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code>, <code>del</code>) — keine direkten <code>fetch</code>-Aufrufe in Views.</p>
+        </section>
+
+        <section id="backend">
+          <h2><span class="section-icon"><i data-lucide="server"></i></span> Backend / API</h2>
+          <p>Die REST-API liegt unter dem Präfix <code>/api/</code>. Ein <code>before_request</code>-Hook prüft die Anmeldung für alle API-Aufrufe außer Login und Konfiguration.</p>
+
+          <span class="code-label">backend/app.py</span>
+<pre><code>@app.before_request
+def require_login_for_api():
+    if request.method == 'OPTIONS':
+        return None
+    if not request.path.startswith('/api/'):
+        return None
+    if request.path.startswith('/api/auth/login') or request.path == '/api/auth/config':
+        return None
+    get_current_benutzer_or_401()
+    return None</code></pre>
+
+          <h3>Wichtige Endpunkte</h3>
+          <table>
+            <thead><tr><th>Methode</th><th>Route</th><th>Zweck</th></tr></thead>
+            <tbody>
+              <tr><td>POST</td><td><code>/api/auth/login</code></td><td>Anmeldung, setzt Cookie</td></tr>
+              <tr><td>POST</td><td><code>/api/auth/logout</code></td><td>Sitzung beenden</td></tr>
+              <tr><td>GET</td><td><code>/api/auth/me</code></td><td>Aktueller Benutzer + Idle-Meta</td></tr>
+              <tr><td>GET</td><td><code>/api/protokolle</code></td><td>Liste aller Protokolle</td></tr>
+              <tr><td>POST</td><td><code>/api/protokolle</code></td><td>Neues Protokoll inkl. Einträge</td></tr>
+              <tr><td>PUT</td><td><code>/api/protokolle/&lt;id&gt;</code></td><td>Update (≤ 72 h)</td></tr>
+              <tr><td>DELETE</td><td><code>/api/protokolle/&lt;id&gt;</code></td><td>Löschen (≤ 72 h, kaskadiert)</td></tr>
+              <tr><td>POST</td><td><code>/api/eintraege</code></td><td>Neuer Eintrag zu Protokoll</td></tr>
+              <tr><td>PATCH</td><td><code>/api/eintraege/&lt;id&gt;/aufgabe-status</code></td><td>Aufgabenstatus (ohne 72-h-Sperre)</td></tr>
+              <tr><td>POST</td><td><code>/api/kommentare</code></td><td>Kommentar (ohne 72-h-Sperre)</td></tr>
+              <tr><td>GET/POST</td><td><code>/api/personen</code>, <code>/api/organisationen</code>, …</td><td>Stammdaten (idempotent bei POST)</td></tr>
+              <tr><td>GET</td><td><code>/api/backup</code></td><td>Datenbank-Download</td></tr>
+              <tr><td>POST</td><td><code>/api/backup/import</code></td><td>Datenbank ersetzen</td></tr>
+            </tbody>
+          </table>
+          <p>Bei <code>HTTP 403</code> liegt entweder eine Berechtigungsverletzung oder ein Verstoß gegen die 72-Stunden-Regel vor; die Detailmeldung steht in <code>description</code>.</p>
+        </section>
+
+        <section id="datenmodell">
+          <h2><span class="section-icon"><i data-lucide="database"></i></span> Datenmodell</h2>
+          <p>SQLAlchemy-Modelle in <code>backend/models.py</code>; SQLite-Datei <code>backend/protokoll.db</code>.</p>
+
+          <table>
+            <thead><tr><th>Tabelle</th><th>Zweck</th></tr></thead>
+            <tbody>
+              <tr><td><code>benutzer</code></td><td>Anmeldekonto mit Passwort-Hash und Rolle</td></tr>
+              <tr><td><code>organisation</code>, <code>person</code></td><td>Stammdaten Firmen / Personen</td></tr>
+              <tr><td><code>projektart</code>, <code>projekt</code>, <code>prozessschritt</code>, <code>prozessunterschritt</code></td><td>Hierarchie zur Einordnung</td></tr>
+              <tr><td><code>protokoll</code>, <code>eintrag</code></td><td>Kerntabellen mit Audit-Feldern</td></tr>
+              <tr><td><code>eintrag_person</code></td><td>n:m Teilnehmer ↔ Eintrag</td></tr>
+              <tr><td><code>kommentar</code></td><td>Kommentar zu Eintrag</td></tr>
+              <tr><td><code>lookup</code></td><td>Wertelisten (Typ, Ort, Thema, Aufgabe)</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Kerntabelle <code>protokoll</code> mit Audit-Feldern</h3>
+          <span class="code-label">backend/models.py</span>
+<pre><code>class Protokoll(db.Model):
+    __tablename__ = 'protokoll'
+    protokoll_id      = db.Column(db.Integer, primary_key=True)
+    datum             = db.Column(db.Date, nullable=False)
+    ort               = db.Column(db.String(300), default='')
+    typ               = db.Column(db.String(100), nullable=False)
+    autor_id          = db.Column(db.Integer, db.ForeignKey('benutzer.benutzer_id'), nullable=False)
+    erstellt_am       = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    bearbeitet_von_id = db.Column(db.Integer, db.ForeignKey('benutzer.benutzer_id'), nullable=True)
+    bearbeitet_am     = db.Column(db.DateTime, nullable=True)
+    eintraege         = db.relationship(
+        'Eintrag', back_populates='protokoll',
+        cascade='all, delete-orphan'
+    )</code></pre>
+          <p>Aufgaben sind als <code>JSON</code>-Array am Eintrag gespeichert ({<code>text</code>, <code>status</code>}); <code>lookup</code> nutzt einen Unique-Constraint auf (<code>kategorie</code>, <code>wert</code>) zur Dublettenvermeidung.</p>
+        </section>
+
+        <section id="auth">
+          <h2><span class="section-icon"><i data-lucide="shield-check"></i></span> Authentifizierung &amp; Rollen</h2>
+          <p>Anmeldung über Benutzername und Passwort. Passwörter werden mit <code>werkzeug.security</code> als Hash gespeichert; das Sitzungs-Cookie ist HTTP-Only. Eine Idle-Prüfung beendet inaktive Sitzungen automatisch.</p>
+
+          <h3>Rollen (Stufen)</h3>
+          <table>
+            <thead><tr><th>Rolle</th><th>Stufe</th><th>Darf zusätzlich</th></tr></thead>
+            <tbody>
+              <tr><td><code>user</code></td><td>0</td><td>Protokolle lesen/anlegen/kommentieren</td></tr>
+              <tr><td><code>mitarbeiter</code></td><td>1</td><td>Stammdaten, Benutzer-Konten anlegen</td></tr>
+              <tr><td><code>admin</code></td><td>2</td><td>Mitarbeiter-Konten</td></tr>
+              <tr><td><code>developer</code></td><td>3</td><td>Admin-Konten, Entwicklerdokumentation</td></tr>
+              <tr><td><code>masterdeveloper</code></td><td>4</td><td>Developer-Konten</td></tr>
+            </tbody>
+          </table>
+          <p>Frontend-Helfer in <code>utils/roles.js</code> (<code>darfStammdaten</code>, <code>darfBenutzerVerwalten</code>, <code>darfEntwicklerdoku</code>); Backend-Logik in <code>backend/roles.py</code>. Niemals nur auf das Frontend verlassen — Berechtigung immer auf dem Server prüfen.</p>
+        </section>
+
+        <section id="frist72">
+          <h2><span class="section-icon"><i data-lucide="clock"></i></span> 72-Stunden-Regel</h2>
+          <p>Schreibroutinen für Protokoll und Eintrag prüfen vor jeder Änderung die Frist mit der zentralen Hilfsfunktion <code>is_editable</code>.</p>
+
+          <span class="code-label">backend/app.py</span>
+<pre><code>def is_editable(erstellt_am: datetime) -&gt; bool:
+    return (datetime.utcnow() - erstellt_am) &lt;= timedelta(hours=72)
+
+
+@app.route('/api/protokolle/&lt;int:protokoll_id&gt;', methods=['PUT'])
+def update_protokoll(protokoll_id):
+    protokoll = Protokoll.query.get_or_404(protokoll_id)
+    if not is_editable(protokoll.erstellt_am):
+        abort(403, description='Bearbeitung nach 72h gesperrt.')
+    ...</code></pre>
+
+          <table>
+            <thead><tr><th>Aktion</th><th>Nach 72 h</th></tr></thead>
+            <tbody>
+              <tr><td>Protokoll / Eintrag bearbeiten oder löschen</td><td>Gesperrt (403)</td></tr>
+              <tr><td>Aufgabenstatus ändern</td><td>Weiter möglich (eigene Route)</td></tr>
+              <tr><td>Kommentar hinzufügen</td><td>Weiter möglich</td></tr>
+              <tr><td>Organisation einer Person ändern</td><td>Nur 72 h nach Personen-Anlage</td></tr>
+            </tbody>
+          </table>
+          <p>Das Frontend spiegelt die Regel über <code>checkIsEditable</code> in <code>App.jsx</code> — die endgültige Durchsetzung erfolgt im Backend.</p>
+        </section>
+
+        <section id="deployment">
+          <h2><span class="section-icon"><i data-lucide="rocket"></i></span> Deployment</h2>
+          <p>Die Anwendung läuft im Produktivbetrieb auf einem Windows-Host-PC im Firmennetz. <code>backend/run_production.py</code> bündelt API und gebautes Frontend in einem Prozess (Waitress).</p>
+
+          <span class="code-label">backend/run_production.py (Auszug)</span>
+<pre><code>if __name__ == '__main__':
+    ensure_benutzer_schema(app)
+    port = int(os.getenv('PORT', '5000'))
+    host = os.getenv('HOST', '0.0.0.0')
+
+    if not _frontend_ready():
+        print('FEHLER: frontend/dist fehlt.')
+        raise SystemExit(1)
+
+    ip = _lan_ip()
+    print(f'  Lokal:    http://127.0.0.1:{port}')
+    print(f'  Im Firmennetz: http://{ip}:{port}')
+    serve(app, host=host, port=port, threads=4)</code></pre>
+
+          <h3>Inbetriebnahme</h3>
+          <ol>
+            <li><code>INSTALL.bat</code> — installiert bei Bedarf Python/Node per winget, richtet venv ein, baut <code>frontend/dist</code>.</li>
+            <li><code>START.bat</code> — startet Waitress + statisches Frontend (oder <code>python backend/run_production.py</code>).</li>
+            <li>Erreichbarkeit prüfen: Browser auf <code>http://&lt;Host-IP&gt;:5000</code>.</li>
+            <li>Initiale Benutzer-Passwörter über die Benutzerverwaltung anpassen lassen.</li>
+          </ol>
+        </section>
+
+        <section id="backup">
+          <h2><span class="section-icon"><i data-lucide="hard-drive"></i></span> Backup &amp; Migration</h2>
+          <p>Die Datenbank ist eine einzelne SQLite-Datei. Sicherung über das Menü (Datei-Download) oder durch Kopieren der Datei <code>backend/protokoll.db</code>. Import über das Menü überschreibt die aktuelle DB — vorher wird automatisch eine Kopie heruntergeladen.</p>
+
+          <h3>Schema-Migration</h3>
+          <p>Beim Start ruft <code>app.py</code> <code>ensure_benutzer_schema(app)</code> aus <code>schema_migrate.py</code>. Die Funktion prüft den Ist-Zustand und ergänzt fehlende Tabellen oder Spalten, ohne Daten zu verlieren. Erweiterungen am Datenmodell sollten dort als idempotente Schritte ergänzt werden.</p>
+          <div class="box box-warn">
+            <i data-lucide="alert-triangle"></i>
+            <div>
+              <strong>Vor jeder Schema-Änderung</strong>
+              <code>protokoll.db</code> sichern. SQLite kennt kein vollständiges <code>ALTER TABLE</code>; manche Änderungen erfordern <code>CREATE TABLE … new</code> + <code>INSERT … SELECT</code> + <code>DROP</code> + <code>RENAME</code> (Beispiele siehe <code>_rebuild_protokoll_for_benutzer_fk</code>).
+            </div>
+          </div>
+        </section>
+
+        <section id="faq">
+          <h2><span class="section-icon"><i data-lucide="help-circle"></i></span> FAQ Entwickler</h2>
+
+          <div class="card">
+            <h4>Wo wird die 72-Stunden-Regel durchgesetzt?</h4>
+            <p>Server in <code>backend/app.py</code> über <code>is_editable(erstellt_am)</code>; Client spiegelt nur die Anzeige (Schloss-Symbol). Neue Schreib­routinen müssen die Prüfung explizit aufrufen.</p>
+          </div>
+          <div class="card">
+            <h4>Wie ergänze ich einen neuen Endpoint?</h4>
+            <p>Route in <code>app.py</code> definieren, im Frontend <code>api.js</code> einen passenden Helfer ergänzen und in der jeweiligen View aufrufen. Bei Schreibrouten Authentifizierung (greift automatisch) und Audit-Felder beachten.</p>
+          </div>
+          <div class="card">
+            <h4>Wie fügt man eine neue Rolle hinzu?</h4>
+            <p><code>backend/roles.py</code>: Rollenkonstante, <code>VALID_ROLLEN</code>, <code>ROLLE_STUFE</code>, <code>ROLLE_LABEL</code>. Anschließend im Frontend in <code>utils/roles.js</code> dieselben Konstanten ergänzen.</p>
+          </div>
+          <div class="card">
+            <h4>Wie wird das Frontend produktiv ausgeliefert?</h4>
+            <p>Über <code>npm run build</code> entsteht <code>frontend/dist</code>. <code>run_production.py</code> liefert daraus statische Assets und reicht <code>/api/*</code> an Flask weiter. Im Entwicklungsmodus läuft Vite separat mit Proxy auf <code>localhost:5000</code>.</p>
+          </div>
+          <div class="card">
+            <h4>Warum sehe ich diese Seite, andere Benutzer aber nicht?</h4>
+            <p>Der Menüeintrag ist erst ab Rolle <code>developer</code> sichtbar (<code>darfEntwicklerdoku</code> in <code>utils/roles.js</code>). Die statische HTML-Seite selbst ist unter ihrer URL aufrufbar — eine zusätzliche Server-Prüfung ist nicht implementiert, weil die Inhalte keine geheimen Schlüssel enthalten.</p>
+          </div>
+        </section>
+
+        <footer class="handbuch-footer">
+          <p>Protokoll-Manager – Entwicklerdokumentation. Aufbau, Setup und Server: siehe <code>EINRICHTUNG.md</code> sowie <code>docs/entwicklungsdoku/ENTWICKLUNGSANLEITUNG.md</code> im Projektordner.</p>
+          <p><a href="/">Zur Anwendung</a></p>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('btnDokuPdf').addEventListener('click', () => window.print());
+    document.getElementById('btnDokuPrint').addEventListener('click', () => window.print());
+    lucide.createIcons();
+
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    menuToggle?.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    const links = document.querySelectorAll('.nav-link');
+    const sections = [...document.querySelectorAll('section[id]')];
+
+    const onScroll = () => {
+      let current = '';
+      sections.forEach((sec) => {
+        if (window.scrollY >= sec.offsetTop - 120) current = sec.id;
+      });
+      links.forEach((a) => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    };
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+
+    links.forEach((a) => a.addEventListener('click', () => {
+      if (window.innerWidth <= 900) sidebar.classList.remove('open');
+    }));
+  </script>
+</body>
+</html>

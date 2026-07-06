@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Benutzerhandbuch – Protokoll-Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --violet-600: #7c3aed;
+      --violet-700: #6d28d9;
+      --indigo-600: #4f46e5;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-500: #64748b;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --sidebar-w: 17rem;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--slate-800);
+      background: var(--slate-50);
+    }
+    a { color: var(--violet-600); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: #fff;
+      border-right: 1px solid var(--slate-200);
+      padding: 1.25rem 0;
+      overflow-y: auto;
+      z-index: 40;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0 1.25rem 1.25rem;
+      border-bottom: 1px solid var(--slate-100);
+      margin-bottom: 0.75rem;
+    }
+    .sidebar-brand .icon-box {
+      background: linear-gradient(135deg, var(--violet-600), var(--indigo-600));
+      color: #fff; padding: 0.45rem; border-radius: 0.6rem;
+    }
+    .sidebar-brand span { font-weight: 800; font-size: 0.95rem; line-height: 1.2; }
+    .sidebar-brand small { display: block; font-weight: 500; color: var(--slate-500); font-size: 0.7rem; }
+    .nav-link {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 1.25rem;
+      font-size: 0.875rem;
+      color: var(--slate-700);
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: #f5f3ff; color: var(--violet-700); text-decoration: none; }
+    .nav-link.active { background: #f5f3ff; color: var(--violet-700); border-left-color: var(--violet-600); font-weight: 600; }
+    .nav-group { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--slate-500); padding: 0.75rem 1.25rem 0.25rem; }
+
+    .main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; }
+    .hero {
+      background: linear-gradient(135deg, var(--violet-600) 0%, var(--indigo-600) 100%);
+      color: #fff;
+      padding: 3rem 2.5rem 2.5rem;
+    }
+    .hero h1 { margin: 0 0 0.5rem; font-size: clamp(1.75rem, 4vw, 2.25rem); font-weight: 800; letter-spacing: -0.02em; }
+    .hero p { margin: 0; max-width: 42rem; opacity: 0.92; font-size: 1.05rem; }
+    .hero-meta { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: rgba(255,255,255,0.15); padding: 0.35rem 0.75rem;
+      border-radius: 999px; font-size: 0.8rem; font-weight: 500;
+    }
+
+    .content { padding: 2rem 2.5rem 4rem; max-width: 52rem; }
+    section { margin-bottom: 3rem; }
+    section h2 {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 1.45rem; font-weight: 800; color: var(--slate-800);
+      margin: 0 0 1rem; padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--slate-200);
+    }
+    section h2 .section-icon {
+      display: inline-flex; padding: 0.4rem;
+      background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+      border-radius: 0.5rem; color: var(--violet-600);
+    }
+    h3 { font-size: 1.1rem; font-weight: 700; margin: 1.5rem 0 0.6rem; color: var(--slate-700); }
+    h4 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.4rem; }
+    p { margin: 0 0 0.85rem; }
+    ul, ol { margin: 0 0 1rem; padding-left: 1.35rem; }
+    li { margin-bottom: 0.35rem; }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 1rem;
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    }
+    .card h4 { margin-top: 0; display: flex; align-items: center; gap: 0.45rem; }
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 2.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute; left: 0; top: 0.1rem;
+      width: 1.65rem; height: 1.65rem;
+      background: var(--violet-600); color: #fff;
+      font-size: 0.8rem; font-weight: 700;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .box {
+      border-radius: 0.75rem;
+      padding: 0.9rem 1.1rem;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+      display: flex; gap: 0.65rem;
+      align-items: flex-start;
+    }
+    .box-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .box-tip { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .box-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .box-lock { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .box strong { display: block; margin-bottom: 0.2rem; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 1rem 0; }
+    th, td { border: 1px solid var(--slate-200); padding: 0.55rem 0.65rem; text-align: left; }
+    th { background: var(--slate-100); font-weight: 600; }
+    td.center, th.center { text-align: center; }
+    .yes { color: #15803d; font-weight: 700; }
+    .no { color: #94a3b8; }
+
+    .menu-mock {
+      display: inline-block;
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 0.75rem;
+      padding: 0.35rem 0;
+      min-width: 11rem;
+      font-size: 0.82rem;
+      box-shadow: 0 4px 12px rgba(15,23,42,0.08);
+    }
+    .menu-mock div {
+      padding: 0.4rem 0.85rem;
+      display: flex; align-items: center; gap: 0.45rem;
+      color: var(--slate-700);
+    }
+    .menu-mock .sep { height: 1px; background: var(--slate-100); margin: 0.2rem 0; padding: 0; }
+    .menu-mock .hl { background: #f5f3ff; color: var(--violet-700); font-weight: 600; }
+    .menu-mock .muted { color: var(--slate-500); font-style: italic; }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.35rem;
+      background: var(--slate-100);
+      color: var(--slate-700);
+      margin-right: 0.25rem;
+    }
+    .tag-violet { background: #ede9fe; color: var(--violet-700); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .menu-toggle {
+        display: flex; position: fixed; bottom: 1.25rem; right: 1.25rem;
+        z-index: 50; background: var(--violet-600); color: #fff;
+        border: none; border-radius: 50%; width: 3rem; height: 3rem;
+        align-items: center; justify-content: center; cursor: pointer;
+        box-shadow: 0 4px 14px rgba(124,58,237,0.45);
+      }
+      .content { padding: 1.5rem 1.25rem 3rem; }
+      .hero { padding: 2rem 1.25rem; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 901px) { .menu-toggle { display: none; } }
+
+    footer.handbuch-footer {
+      margin-top: 2rem; padding-top: 1.5rem;
+      border-top: 1px solid var(--slate-200);
+      font-size: 0.85rem; color: var(--slate-500);
+    }
+    .handbuch-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: #fff;
+      border-bottom: 1px solid var(--slate-200);
+      padding: 0.5rem 1.25rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-left: var(--sidebar-w);
+    }
+    .handbuch-toolbar button {
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.9rem;
+      border: 1px solid var(--slate-300);
+      border-radius: 0.5rem;
+      background: #fff;
+      color: var(--slate-700);
+      cursor: pointer;
+    }
+    .handbuch-toolbar button:hover {
+      background: #f5f3ff;
+      border-color: var(--violet-600);
+      color: var(--violet-700);
+    }
+    .handbuch-toolbar .hint {
+      font-size: 0.75rem;
+      color: var(--slate-500);
+      margin-left: auto;
+    }
+    @media (max-width: 900px) {
+      .handbuch-toolbar { margin-left: 0; }
+    }
+    @media print {
+      .sidebar, .menu-toggle, .handbuch-toolbar { display: none !important; }
+      .main { margin-left: 0; }
+      .hero { background: #fff; color: var(--slate-800); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      section { break-inside: avoid; page-break-inside: avoid; }
+      body { background: #fff; font-size: 10pt; }
+      .content { padding: 0 1cm; }
+      a { color: #000; text-decoration: none; }
+      @page { margin: 1.5cm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="handbuch-toolbar no-print">
+    <button type="button" id="btnHandbuchPdf">Handbuch als PDF speichern</button>
+    <button type="button" id="btnHandbuchPrint">Drucken</button>
+    <span class="hint">Im Druckdialog „Als PDF speichern“ wählen (z.&nbsp;B. Microsoft Print to PDF)</span>
+  </div>
+  <button type="button" class="menu-toggle" aria-label="Inhaltsverzeichnis" id="menuToggle">
+    <i data-lucide="menu"></i>
+  </button>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="icon-box"><i data-lucide="file-text" style="width:20px;height:20px"></i></div>
+        <div>
+          <span>Protokoll-Manager</span>
+          <small>Benutzerhandbuch</small>
+        </div>
+      </div>
+      <div class="nav-group">Einstieg</div>
+      <a class="nav-link" href="#einfuehrung"><i data-lucide="home" style="width:16px;height:16px"></i> Einführung</a>
+      <a class="nav-link" href="#anmeldung"><i data-lucide="log-in" style="width:16px;height:16px"></i> Anmeldung</a>
+      <a class="nav-link" href="#navigation"><i data-lucide="menu" style="width:16px;height:16px"></i> Menü & Navigation</a>
+      <div class="nav-group">Arbeiten mit Protokollen</div>
+      <a class="nav-link" href="#uebersicht"><i data-lucide="list" style="width:16px;height:16px"></i> Übersicht</a>
+      <a class="nav-link" href="#formular"><i data-lucide="file-pen-line" style="width:16px;height:16px"></i> Formular</a>
+      <a class="nav-link" href="#detail"><i data-lucide="file-search" style="width:16px;height:16px"></i> Protokoll-Detail</a>
+      <a class="nav-link" href="#72h"><i data-lucide="clock" style="width:16px;height:16px"></i> 72-Stunden-Regel</a>
+      <div class="nav-group">Verwaltung</div>
+      <a class="nav-link" href="#stammdaten"><i data-lucide="database" style="width:16px;height:16px"></i> Stammdaten</a>
+      <a class="nav-link" href="#profil"><i data-lucide="user" style="width:16px;height:16px"></i> Benutzerdaten</a>
+      <a class="nav-link" href="#benutzerverwaltung"><i data-lucide="users" style="width:16px;height:16px"></i> Benutzerverwaltung</a>
+      <a class="nav-link" href="#backup"><i data-lucide="hard-drive" style="width:16px;height:16px"></i> Backup & Import</a>
+      <div class="nav-group">Referenz</div>
+      <a class="nav-link" href="#rollen"><i data-lucide="shield" style="width:16px;height:16px"></i> Rollen & Rechte</a>
+      <a class="nav-link" href="#faq"><i data-lucide="help-circle" style="width:16px;height:16px"></i> Häufige Fragen</a>
+      <div style="padding:1rem 1.25rem 0;font-size:0.8rem;">
+        <a href="/">← Zur Anwendung</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <h1>Benutzerhandbuch</h1>
+        <p>Anleitung für die tägliche Arbeit mit dem Protokoll-Manager: Protokolle erfassen, suchen, bearbeiten und verwalten.</p>
+        <div class="hero-meta">
+          <span class="hero-pill"><i data-lucide="monitor" style="width:14px;height:14px"></i> Webbrowser</span>
+          <span class="hero-pill"><i data-lucide="users" style="width:14px;height:14px"></i> Für alle angemeldeten Benutzer</span>
+          <span class="hero-pill"><i data-lucide="book-open" style="width:14px;height:14px"></i> Stand: Mai 2026</span>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <section id="einfuehrung">
+          <h2><span class="section-icon"><i data-lucide="home"></i></span> Einführung</h2>
+          <p>Der <strong>Protokoll-Manager</strong> dient der strukturierten Erfassung von Gesprächs- und Besprechungsprotokollen. Ein Protokoll besteht aus Basisdaten (Datum, Ort, Typ) und einem oder mehreren <strong>Gesprächseinträgen</strong> mit Thema, Teilnehmern, Inhalt und optionalen Aufgaben.</p>
+          <div class="card">
+            <h4><i data-lucide="layers"></i> Zentrale Bereiche der Anwendung</h4>
+            <ul>
+              <li><strong>Übersicht</strong> – alle Protokolle auflisten, filtern und öffnen</li>
+              <li><strong>Formular</strong> – neues Protokoll anlegen oder bestehendes bearbeiten</li>
+              <li><strong>Protokoll-Detail</strong> – Einträge lesen, kommentieren, Aufgabenstatus pflegen</li>
+              <li><strong>Stammdaten</strong> – Organisationen, Personen, Projekte usw. pflegen (ab Rolle Mitarbeiter)</li>
+              <li><strong>Benutzerdaten / Benutzerverwaltung</strong> – eigenes Konto und ggf. weitere Benutzer</li>
+            </ul>
+          </div>
+          <div class="box box-info">
+            <i data-lucide="info"></i>
+            <div>
+              <strong>Zugriff im Büro-LAN</strong>
+              Die Anwendung wird im Browser aufgerufen (z.&nbsp;B. <code>http://Server-IP:5000</code>). Dieses Handbuch ist unter <code>/benutzerhandbuch/index.html</code> erreichbar – am gleichen Server wie die App.
+            </div>
+          </div>
+        </section>
+
+        <section id="anmeldung">
+          <h2><span class="section-icon"><i data-lucide="log-in"></i></span> Anmeldung und Abmeldung</h2>
+          <h3>Anmelden</h3>
+          <ol class="steps">
+            <li>Die Anwendungs-URL im Browser öffnen.</li>
+            <li><strong>Benutzername</strong> und <strong>Passwort</strong> eingeben.</li>
+            <li>Mit <strong>Anmelden</strong> bestätigen.</li>
+          </ol>
+          <p>Bei erfolgreicher Anmeldung gelangen Sie zur <strong>Übersicht</strong>. Oben rechts in der Kopfzeile wird Ihr Anzeigename angezeigt.</p>
+          <div class="box box-tip">
+            <i data-lucide="key"></i>
+            <div>
+              <strong>Sitzung</strong>
+              Die Anmeldung gilt für die aktuelle Browsersitzung. Nach <strong>Schließen des Browsers</strong> (je nach Browser-Einstellung) oder bei <strong>Abmelden</strong> ist eine erneute Anmeldung nötig. Nach der konfigurierten <strong>Inaktivitätszeit</strong> (Standard: 30&nbsp;Minuten, nur Maus- und Tastatureingaben zählen) erscheint ein Hinweis; mit einem Klick gelangen Sie zur Anmeldung. Melden Sie sich in einem <strong>anderen Tab</strong> an, wird eine bereits geöffnete Ansicht nach einem Tab-Wechsel oft wieder aktiv – ohne erneute Eingabe.
+            </div>
+          </div>
+          <h3>Abmelden</h3>
+          <p>Über das <strong>Menü</strong> (Symbol oben rechts) den Eintrag <strong>Abmelden</strong> wählen. Die Anwendung kehrt zur Anmeldeseite zurück.</p>
+        </section>
+
+        <section id="navigation">
+          <h2><span class="section-icon"><i data-lucide="menu"></i></span> Menü und Navigation</h2>
+          <p>Die Steuerung erfolgt über das <strong>Menü</strong> in der oberen Leiste. Es gibt keine separate Tab-Leiste; alle Bereiche sind über dieses Menü erreichbar.</p>
+          <div class="menu-mock" aria-hidden="true">
+            <div class="hl"><i data-lucide="list" style="width:14px"></i> Übersicht</div>
+            <div><i data-lucide="file-pen-line" style="width:14px"></i> Formular</div>
+            <div><i data-lucide="database" style="width:14px"></i> Stammdaten <span class="muted">(ab Mitarbeiter)</span></div>
+            <div class="sep"></div>
+            <div><i data-lucide="user" style="width:14px"></i> Benutzerdaten</div>
+            <div><i data-lucide="users" style="width:14px"></i> Benutzerverwaltung <span class="muted">(Admin+)</span></div>
+            <div class="sep"></div>
+            <div><i data-lucide="log-out" style="width:14px"></i> Abmelden</div>
+            <div class="sep"></div>
+            <div><i data-lucide="hard-drive-download" style="width:14px"></i> Backup</div>
+            <div><i data-lucide="hard-drive-upload" style="width:14px"></i> Import</div>
+          </div>
+          <p style="margin-top:1rem;">Nicht jeder Menüpunkt ist für jede Rolle sichtbar. Die Tabelle unter <a href="#rollen">Rollen & Rechte</a> zeigt die Unterschiede.</p>
+          <div class="box box-info">
+            <i data-lucide="bookmark"></i>
+            <div>
+              <strong>Letzter Stand</strong>
+              Die Anwendung merkt sich den zuletzt geöffneten Bereich (z.&nbsp;B. Übersicht oder ein geöffnetes Protokoll) im Browser – nach erneutem Laden der Seite wird dieser Stand wiederhergestellt, sofern Sie angemeldet sind.
+            </div>
+          </div>
+        </section>
+
+        <section id="uebersicht">
+          <h2><span class="section-icon"><i data-lucide="list"></i></span> Übersicht</h2>
+          <p>Die Übersicht ist die Startseite nach der Anmeldung. Hier sehen Sie alle Protokolle in einer Tabelle.</p>
+
+          <h3>Protokoll öffnen</h3>
+          <p>Klicken Sie auf eine Zeile in der Tabelle, um das <strong>Protokoll-Detail</strong> zu öffnen. Mit dem Pfeil-Symbol in der Spalte <strong>Aktionen</strong> gelangen Sie ebenfalls zur Detailansicht.</p>
+
+          <h3>Neues Protokoll</h3>
+          <p>Mit dem violetten <strong>+</strong>-Button rechts oben öffnen Sie das Formular für ein <strong>neues Protokoll</strong>.</p>
+
+          <h3>Suche und Sortierung</h3>
+          <div class="grid-2">
+            <div class="card">
+              <h4><i data-lucide="search"></i> Volltextsuche</h4>
+              <p>Das Feld <strong>Volltextsuche…</strong> durchsucht Protokolle und Einträge nach freiem Text.</p>
+            </div>
+            <div class="card">
+              <h4><i data-lucide="arrow-up-down"></i> Sortierung</h4>
+              <p>Sortierung nach: <span class="tag">Neueste zuerst</span> <span class="tag">Älteste zuerst</span> <span class="tag">ID absteigend</span> <span class="tag">ID aufsteigend</span></p>
+            </div>
+          </div>
+
+          <h3>Erweiterte Filter</h3>
+          <p>Über das Filter-Symbol öffnen Sie <strong>Erweiterte Suche & Filter</strong>. Verfügbar u.&nbsp;a.:</p>
+          <ul>
+            <li>Protokoll-ID, Datum, Ort, Typ</li>
+            <li>Ersteller, Erstellt am</li>
+            <li>Thema, Projektart, Prozessschritt, Unterschritt, Projekt</li>
+            <li>Teilnehmer, Aufgaben, Inhalt, Kommentare</li>
+          </ul>
+          <p><strong>Zurücksetzen</strong> leert nur die erweiterten Filter. <strong>Filter leeren</strong> (erscheint bei aktiven Filtern) setzt Suche und alle Filter zurück.</p>
+
+          <h3>Aufgaben-Filter (Prozessleiste)</h3>
+          <p>Unter der Suchleiste filtert die farbige Leiste die <strong>Protokoll-Liste</strong> nach Aufgabenstatus in den Einträgen:</p>
+          <p>
+            <span class="tag tag-violet">Alle Aufgaben</span>
+            <span class="tag">Offen</span>
+            <span class="tag">Geplant</span>
+            <span class="tag">In Bearbeitung</span>
+            <span class="tag">Erledigt</span>
+          </p>
+          <p>Ein Klick aktiviert den Filter; erneuter Klick deaktiviert ihn.</p>
+
+          <h3>Protokoll aus der Übersicht bearbeiten</h3>
+          <p>In der Spalte <strong>Aktionen</strong> erscheint ein Bearbeiten-Symbol, wenn das Protokoll noch innerhalb der <a href="#72h">72-Stunden-Frist</a> liegt. Andernfalls wird <strong>Bearbeitung gesperrt (&gt; 72 h)</strong> angezeigt.</p>
+        </section>
+
+        <section id="formular">
+          <h2><span class="section-icon"><i data-lucide="file-pen-line"></i></span> Formular – Protokoll anlegen und bearbeiten</h2>
+          <p>Erreichbar über <strong>Menü → Formular</strong> oder den <strong>+</strong>-Button in der Übersicht. Im Bearbeitungsmodus lautet die Überschrift <strong>Protokoll #… bearbeiten</strong>.</p>
+
+          <h3>Abschnitt 1: Basisdaten</h3>
+          <ul>
+            <li><strong>Typ</strong> – Art des Termins (z.&nbsp;B. Besprechung); Vorschläge aus der Datenbank, neue Werte möglich</li>
+            <li><strong>Datum</strong> – Datum des Protokolls</li>
+            <li><strong>Ort</strong> – Ort mit Autovervollständigung; neue Orte können angelegt werden</li>
+          </ul>
+
+          <h3>Abschnitt 2: Gespräche / Einträge</h3>
+          <p>Jeder Eintrag umfasst:</p>
+          <div class="card">
+            <ul>
+              <li><strong>Thema</strong></li>
+              <li><strong>Projektzuordnung</strong> – Projektart (Pflichtfeld), optional Prozessschritt, Prozessunterschritt, Projekt</li>
+              <li><strong>Teilnehmer</strong> – Personen mit optionaler Organisation und Zeiten</li>
+              <li><strong>Gesprächsinhalt</strong> – Freitext des Gesprächs</li>
+              <li><strong>Aufgaben (optional)</strong> – Text und Status (Offen, Geplant, In Bearbeitung, Erledigt); mehrere Aufgaben pro Eintrag möglich</li>
+            </ul>
+          </div>
+          <p>Mit <strong>+ Gespräch hinzufügen</strong> legen Sie weitere Einträge an. Ein Eintrag kann entfernt werden, solange mindestens einer bleibt.</p>
+
+          <h3>Speichern und Abbrechen</h3>
+          <ul>
+            <li><strong>Speichern</strong> – legt ein neues Protokoll an oder speichert Änderungen am bestehenden</li>
+            <li><strong>Abbrechen</strong> – verwirft ungespeicherte Eingaben und kehrt zur Übersicht zurück</li>
+          </ul>
+
+          <div class="box box-tip">
+            <i data-lucide="plus-circle"></i>
+            <div>
+              <strong>Neue Stammdaten im Formular</strong>
+              Personen, Organisationen, Projektarten, Projekte, Schritte und Vorschlagswerte (Typ, Ort, Thema, Aufgabe) können direkt im Formular neu angelegt werden – ohne zuvor die Stammdatenverwaltung zu öffnen.
+            </div>
+          </div>
+        </section>
+
+        <section id="detail">
+          <h2><span class="section-icon"><i data-lucide="file-search"></i></span> Protokoll-Detail</h2>
+          <p>Die Detailansicht zeigt ein Protokoll mit allen Gesprächseinträgen. Oben stehen Protokollnummer, Datum, Typ, Ort, Ersteller, Bearbeiter und Zeitstempel der Erfassung.</p>
+
+          <h3>Werkzeugleiste</h3>
+          <table>
+            <thead><tr><th>Schaltfläche</th><th>Funktion</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Zurück</strong></td><td>Zur Übersicht</td></tr>
+              <tr><td><strong>Alle Einträge ein-/ausblenden</strong></td><td>Klappt alle Gesprächseinträge auf oder zu</td></tr>
+              <tr><td><strong>Protokoll bearbeiten</strong></td><td>Öffnet das Formular (nur innerhalb 72 h)</td></tr>
+              <tr><td><strong>Protokoll löschen</strong></td><td>Löscht das gesamte Protokoll nach Bestätigung (nur innerhalb 72 h)</td></tr>
+              <tr><td><strong>Drucken</strong></td><td>Öffnet den Druckdialog des Browsers (immer verfügbar)</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Gesprächseinträge</h3>
+          <p>Pro Eintrag werden angezeigt: Zuordnung (Projektart usw.), Teilnehmer mit Zeiten, Inhalt, Aufgabenliste, Kommentare.</p>
+          <h4>Eintrag bearbeiten oder löschen</h4>
+          <p>Bei editierbaren Protokollen: <strong>Gespräch bearbeiten</strong>, <strong>Eintrag ausblenden</strong> (nur in der Ansicht), <strong>Eintrag löschen</strong> mit Bestätigungsdialog.</p>
+          <h4>Neues Gespräch</h4>
+          <p><strong>Neues Gespräch anlegen</strong> fügt einen weiteren Eintrag hinzu (nur bei editierbarem Protokoll).</p>
+
+          <h3>Aufgaben</h3>
+          <p>Der <strong>Status</strong> jeder Aufgabe kann über ein Dropdown geändert werden: Offen, Geplant, In Bearbeitung, Erledigt. Dies ist auch nach Ablauf der 72-Stunden-Frist für das Protokoll möglich.</p>
+
+          <h3>Kommentare</h3>
+          <p>Unter jedem Eintrag können Sie <strong>Kommentare</strong> lesen und mit <strong>Kommentar hinzufügen…</strong> plus Senden-Symbol neue Kommentare erfassen. Kommentare sind unabhängig von der 72-Stunden-Bearbeitungsfrist.</p>
+
+          <h3>Schreibgeschützt</h3>
+          <p>Ist die 72-Stunden-Frist abgelaufen, erscheint die Kennzeichnung <strong>Schreibgeschützt</strong>. Lesen, Drucken, Kommentare und Aufgabenstatus bleiben möglich; strukturelle Änderungen am Protokoll nicht mehr.</p>
+        </section>
+
+        <section id="72h">
+          <h2><span class="section-icon"><i data-lucide="clock"></i></span> 72-Stunden-Regel</h2>
+          <div class="box box-lock">
+            <i data-lucide="lock"></i>
+            <div>
+              <strong>Bearbeitungssperre</strong>
+              Protokolle und ihre Gesprächseinträge können nur <strong>72 Stunden</strong> nach dem Zeitpunkt <em>Erfasst am</em> des Protokolls bearbeitet oder gelöscht werden. Danach sind sie schreibgeschützt.
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Aktion</th><th>Nach 72 Stunden</th></tr></thead>
+            <tbody>
+              <tr><td>Protokoll / Eintrag bearbeiten oder löschen</td><td class="no">Nicht möglich</td></tr>
+              <tr><td>Protokoll lesen, drucken</td><td class="yes">Möglich</td></tr>
+              <tr><td>Kommentare hinzufügen</td><td class="yes">Möglich</td></tr>
+              <tr><td>Aufgabenstatus ändern</td><td class="yes">Möglich</td></tr>
+            </tbody>
+          </table>
+          <div class="box box-warn">
+            <i data-lucide="user"></i>
+            <div>
+              <strong>Organisation einer Person</strong>
+              Die Zuordnung einer Person zu einer Organisation im Formular kann nur innerhalb von 72 Stunden nach Anlage der Person geändert werden. Bei älteren Bestandsdaten ohne Zeitstempel ist die Organisation fest.
+            </div>
+          </div>
+        </section>
+
+        <section id="stammdaten">
+          <h2><span class="section-icon"><i data-lucide="database"></i></span> Stammdatenverwaltung</h2>
+          <p><strong>Menü → Stammdaten</strong> (sichtbar ab Rolle <strong>Mitarbeiter</strong> und höher).</p>
+          <p>Hier pflegen Sie zentrale Listen. Neue Einträge entstehen primär über das Protokoll-Formular; in der Stammdatenverwaltung werden bestehende Einträge <strong>bearbeitet</strong> oder <strong>gelöscht</strong>.</p>
+
+          <h3>Registerkarten</h3>
+          <ul>
+            <li><strong>Organisationen</strong></li>
+            <li><strong>Personen</strong> – Vorname, Nachname, Organisation (inkl. „Privat“)</li>
+            <li><strong>Projektarten</strong>, <strong>Projekte</strong>, <strong>Prozessschritte</strong>, <strong>Unterschritte</strong></li>
+            <li><strong>Vorschläge</strong> – Typ, Ort, Thema, Aufgabe (Autocomplete-Werte)</li>
+          </ul>
+          <p>Pro Register: <strong>Suchen…</strong>, dann <strong>Bearbeiten</strong> oder <strong>Löschen</strong>.</p>
+          <div class="box box-warn">
+            <i data-lucide="alert-triangle"></i>
+            <div>
+              <strong>Löschen nur bei Nichtverwendung</strong>
+              Ein Eintrag kann nur gelöscht werden, wenn er in keinem Protokoll oder Eintrag verwendet wird. Andernfalls erscheint eine Fehlermeldung.
+            </div>
+          </div>
+        </section>
+
+        <section id="profil">
+          <h2><span class="section-icon"><i data-lucide="user"></i></span> Benutzerdaten (Profil)</h2>
+          <p><strong>Menü → Benutzerdaten</strong> – für alle angemeldeten Benutzer.</p>
+          <ul>
+            <li><strong>Anzeigename</strong> ändern</li>
+            <li><strong>Benutzername</strong> ändern (erfordert Eingabe des aktuellen Passworts)</li>
+            <li><strong>Passwort ändern</strong> – altes Passwort, neues Passwort (min. 4 Zeichen), Wiederholung</li>
+          </ul>
+          <p>Die <strong>Rolle</strong> wird nur angezeigt und kann hier nicht geändert werden. Mit <strong>Speichern</strong> werden die Änderungen übernommen, mit <strong>Zurück</strong> kehren Sie zum vorherigen Bereich.</p>
+        </section>
+
+        <section id="benutzerverwaltung">
+          <h2><span class="section-icon"><i data-lucide="users"></i></span> Benutzerverwaltung</h2>
+          <p><strong>Menü → Benutzerverwaltung</strong> – für Rollen, die mindestens einen untergeordneten Benutzertyp verwalten dürfen (ab <strong>Mitarbeiter</strong> für reine „Benutzer“-Konten, höhere Rollen für mehr).</p>
+
+          <h3>Benutzer anlegen</h3>
+          <ol class="steps">
+            <li><strong>Benutzer anlegen</strong> wählen.</li>
+            <li>Anzeigename, Benutzername, Rolle und Passwort eingeben.</li>
+            <li>Speichern – es können nur Rollen vergeben werden, die unter Ihrer eigenen Rolle liegen.</li>
+          </ol>
+
+          <h3>Bestehenden Benutzer bearbeiten</h3>
+          <p>Bei bestehenden Konten ist nur <strong>Rolle ändern</strong> möglich. Anzeigename und Passwort sind in dieser Maske gesperrt (Änderung über die eigenen Benutzerdaten durch den jeweiligen Benutzer).</p>
+
+          <h3>Benutzer löschen</h3>
+          <p>Über <strong>Löschen</strong> mit Bestätigung. Nicht möglich, wenn der Benutzer als Ersteller, Bearbeiter oder in Kommentaren referenziert ist.</p>
+          <div class="box box-info">
+            <i data-lucide="shield"></i>
+            <div>
+              <strong>Kein Benutzerwechsel</strong>
+              Es gibt keine Funktion „als anderer Benutzer anmelden“. Jeder arbeitet nur unter dem eigenen Konto.
+            </div>
+          </div>
+        </section>
+
+        <section id="backup">
+          <h2><span class="section-icon"><i data-lucide="hard-drive"></i></span> Backup und Import</h2>
+          <p>Im unteren Bereich des Menüs stehen <strong>Backup</strong> und <strong>Import</strong> zur Verfügung (für alle angemeldeten Benutzer).</p>
+
+          <div class="grid-2">
+            <div class="card">
+              <h4><i data-lucide="hard-drive-download"></i> Backup</h4>
+              <p>Lädt eine Kopie der gesamten Datenbank (<code>.db</code>-Datei) auf Ihren Rechner herunter. Empfohlen vor größeren Änderungen oder vor einem Import.</p>
+            </div>
+            <div class="card">
+              <h4><i data-lucide="hard-drive-upload"></i> Import</h4>
+              <p>Ersetzt die Datenbank auf dem Server durch eine gewählte Backup-Datei. Vorher wird automatisch ein Backup des aktuellen Stands heruntergeladen.</p>
+            </div>
+          </div>
+
+          <h3>Ablauf Import</h3>
+          <ol class="steps">
+            <li><strong>Import</strong> wählen und eine <code>.db</code>-Datei auswählen.</li>
+            <li>Im Dialog <strong>Backup importieren?</strong> die Hinweise lesen.</li>
+            <li>Mit <strong>Importieren</strong> bestätigen – zuerst Sicherung des aktuellen Stands, dann Ersetzen der Datenbank.</li>
+            <li>Die Seite lädt die Daten neu; alle Benutzer sehen danach den importierten Stand.</li>
+          </ol>
+          <div class="box box-warn">
+            <i data-lucide="alert-triangle"></i>
+            <div>
+              <strong>Vorsicht beim Import</strong>
+              Der Import überschreibt die komplette Datenbank auf dem Server. Nur vertrauenswürdige Backup-Dateien verwenden. Das automatisch erzeugte Sicherungs-Backup vor dem Import kann zum Zurücksetzen auf dem lokalen Rechner dienen.
+            </div>
+          </div>
+        </section>
+
+        <section id="rollen">
+          <h2><span class="section-icon"><i data-lucide="shield"></i></span> Rollen und Berechtigungen</h2>
+          <p>Jeder Benutzer hat genau eine Rolle. Höhere Rollen können Benutzer mit niedrigeren Rollen verwalten, nicht aber Gleich- oder Höherstufige.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Funktion</th>
+                <th class="center">Benutzer</th>
+                <th class="center">Mitarbeiter</th>
+                <th class="center">Administrator</th>
+                <th class="center">Developer</th>
+                <th class="center">Master-Developer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Anmeldung, Profil, Protokolle lesen/anlegen</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+              <tr><td>Protokoll bearbeiten/löschen (≤ 72 h)</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+              <tr><td>Kommentare, Aufgabenstatus</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+              <tr><td>Stammdatenverwaltung</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+              <tr><td>Benutzerverwaltung (Menü)</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+              <tr><td>Neue Benutzer anlegen (Rollen)</td><td class="center no">—</td><td class="center">nur Benutzer</td><td class="center">+ Mitarbeiter</td><td class="center">+ Admin</td><td class="center">+ Developer</td></tr>
+              <tr><td>Backup / Import</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Hierarchie (kurz)</h3>
+          <p style="font-family:monospace;font-size:0.9rem;background:#fff;padding:0.75rem 1rem;border-radius:0.5rem;border:1px solid var(--slate-200);">
+            Benutzer &lt; Mitarbeiter &lt; Administrator &lt; Developer &lt; Master-Developer
+          </p>
+        </section>
+
+        <section id="faq">
+          <h2><span class="section-icon"><i data-lucide="help-circle"></i></span> Häufige Fragen</h2>
+
+          <div class="card">
+            <h4>Warum kann ich ein Protokoll nicht mehr bearbeiten?</h4>
+            <p>Seit der Erfassung sind mehr als 72 Stunden vergangen. Sie können das Protokoll weiterhin lesen, drucken, kommentieren und Aufgabenstatus anpassen.</p>
+          </div>
+          <div class="card">
+            <h4>Warum sehe ich „Stammdaten“ nicht im Menü?</h4>
+            <p>Die Stammdatenverwaltung ist ab der Rolle <strong>Mitarbeiter</strong> freigeschaltet. Benutzer mit der Rolle „Benutzer“ haben keinen Zugriff.</p>
+          </div>
+          <div class="card">
+            <h4>Wie drucke ich ein Protokoll?</h4>
+            <p>Im Protokoll-Detail auf <strong>Drucken</strong> klicken und im Browser den Druckdialog bzw. „Als PDF speichern“ nutzen.</p>
+          </div>
+          <div class="card">
+            <h4>Wie erhält man das Benutzerhandbuch als PDF?</h4>
+            <p>Oben auf <strong>Handbuch als PDF speichern</strong> klicken und im Druckdialog den Ziel-Drucker „Microsoft Print to PDF“ (oder vergleichbar) wählen.</p>
+          </div>
+          <div class="card">
+            <h4>Was passiert bei „Filter leeren“?</h4>
+            <p>Volltextsuche, erweiterte Filter und Aufgaben-Filter der Übersicht werden zurückgesetzt; die Liste zeigt wieder alle Protokolle (sortiert nach Ihrer gewählten Sortierung).</p>
+          </div>
+          <div class="card">
+            <h4>Werden meine Eingaben im Formular gespeichert, wenn ich die Seite verlasse?</h4>
+            <p>Die Anwendung kann Entwürfe im Browser zwischenspeichern. Für verbindliche Speicherung immer <strong>Speichern</strong> im Formular verwenden.</p>
+          </div>
+        </section>
+
+        <footer class="handbuch-footer">
+          <p>Protokoll-Manager – Benutzerhandbuch. Technische Installation und Server: siehe <code>EINRICHTUNG.md</code> im Projektordner.</p>
+          <p><a href="/">Zur Anwendung</a></p>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('btnHandbuchPdf').addEventListener('click', () => window.print());
+    document.getElementById('btnHandbuchPrint').addEventListener('click', () => window.print());
+    lucide.createIcons();
+
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    menuToggle?.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    const links = document.querySelectorAll('.nav-link');
+    const sections = [...document.querySelectorAll('section[id]')];
+
+    const onScroll = () => {
+      let current = '';
+      sections.forEach((sec) => {
+        if (window.scrollY >= sec.offsetTop - 120) current = sec.id;
+      });
+      links.forEach((a) => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    };
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+
+    links.forEach((a) => a.addEventListener('click', () => {
+      if (window.innerWidth <= 900) sidebar.classList.remove('open');
+    }));
+  </script>
+</body>
+</html>
