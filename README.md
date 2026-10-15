@@ -1,4 +1,4 @@
-# Protokoll-Manager BE
+# Protokoll-Manager
 
 Webanwendung zur Erfassung und Verwaltung von Gesprächs- und Besprechungsprotokollen.
 
