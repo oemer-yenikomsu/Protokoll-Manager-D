@@ -1,8 +1,15 @@
 # Protokoll-Manager
 
+![Protokoll-Manager – Protokollübersicht](media/protokoll-manager-screenshot.png)
+
 Webanwendung zur Erfassung und Verwaltung von Gesprächs- und Besprechungsprotokollen.
 
 Öffentliche **Portfolio-Version** mit fiktiven Demo-Daten (andere Zugangsdaten und `SECRET_KEY` als die Betriebsversion).
+
+- Login mit Demo-Konten und Session-basierter Anmeldung
+- Protokolle anlegen, bearbeiten und mit Einträgen, Aufgaben und Kommentaren führen
+- Rollenmodell (Benutzer bis Master Developer) mit abgestuften Rechten
+- Stammdaten und Benutzerverwaltung je nach Rolle
 
 ## Technik
 
@@ -31,7 +38,7 @@ npm run dev
 - Anwendung: http://localhost:5173  
 - API: http://127.0.0.1:5000  
 
-Demo-Login (nach `INSTALL.bat` oder `python seed.py`): Benutzer `demo`, Passwort `Demo2026!`
+Demo-Login (nach `INSTALL.bat` oder `python seed.py`): z. B. `user` / `Demo2026!` (weitere: `mitarbeiter`, `admin`, `developer`, `master`)
 
 ## Produktion (Firmennetz, Firmen-PC als Host)
 
