@@ -1,4 +1,4 @@
-# Dokumentation – Protokoll-Manager BE
+# Dokumentation – Protokoll-Manager
 
 Portfolio-Version: fokussiert auf **Entwicklung** und **App-eingebettete Handbücher**.
 

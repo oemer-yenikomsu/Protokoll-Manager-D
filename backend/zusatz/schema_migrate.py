@@ -3,22 +3,30 @@ from datetime import datetime
 
 from sqlalchemy import inspect, text
 
-from kern.modelle import db, Benutzer
+from kern.modelle import db, Benutzer, Protokoll, Eintrag, Kommentar
 from zusatz.auth_util import hash_password
-from zusatz.roles import ROLLE_USER, normalize_rolle
+from zusatz.roles import (
+    ROLLE_USER, ROLLE_MITARBEITER, ROLLE_ADMIN, ROLLE_DEVELOPER, ROLLE_MASTERDEVELOPER,
+    normalize_rolle,
+)
 
-
-DEFAULT_BENUTZER = [
-    (1, 'demo', 'Demo Benutzer', ROLLE_USER),
-    (2, 'alice', 'Alice', ROLLE_USER),
-    (3, 'bob', 'Bob', ROLLE_USER),
-    (4, 'carol', 'Carol', ROLLE_USER),
-    (5, 'dave', 'Dave', ROLLE_USER),
+DEMO_ROLLEN_BENUTZER = [
+    (1, 'user', 'Benutzer', ROLLE_USER),
+    (2, 'mitarbeiter', 'Mitarbeiter', ROLLE_MITARBEITER),
+    (3, 'admin', 'Administrator', ROLLE_ADMIN),
+    (4, 'developer', 'Developer', ROLLE_DEVELOPER),
+    (5, 'master', 'Master Developer', ROLLE_MASTERDEVELOPER),
 ]
 
-TEST_ROLLEN_BENUTZER = [
-    (6, 'demo_admin', 'Demo Admin', ROLLE_USER),
-]
+LEGACY_BENUTZER_RENAMES = {
+    'demouser': ('user', 'Benutzer'),
+    'demo': ('user', 'Benutzer'),
+    'demomitarbeiter': ('mitarbeiter', 'Mitarbeiter'),
+    'demoadmin': ('admin', 'Administrator'),
+    'demo_admin': ('admin', 'Administrator'),
+    'demodeveloper': ('developer', 'Developer'),
+    'demomaster': ('master', 'Master Developer'),
+}
 
 DEMO_PASSWORD = 'Demo2026!'
 
@@ -31,10 +39,83 @@ def _column_names(insp, table):
     return {c['name'] for c in insp.get_columns(table)}
 
 
-def _seed_benutzer(pw_hash: str):
-    for bid, login, anzeige, rolle in DEFAULT_BENUTZER + TEST_ROLLEN_BENUTZER:
-        if Benutzer.query.get(bid):
+LEGACY_UNUSED_LOGINS = (
+    'demo', 'alice', 'bob', 'carol', 'dave', 'demo_admin',
+    'demouser', 'demomitarbeiter', 'demoadmin', 'demodeveloper', 'demomaster',
+)
+
+
+def _benutzer_usage_count(benutzer_id: int) -> int:
+    n = Protokoll.query.filter(
+        (Protokoll.autor_id == benutzer_id) | (Protokoll.bearbeitet_von_id == benutzer_id)
+    ).count()
+    n += Eintrag.query.filter(
+        (Eintrag.erstellt_von_id == benutzer_id) | (Eintrag.bearbeitet_von_id == benutzer_id)
+    ).count()
+    n += Kommentar.query.filter_by(autor_id=benutzer_id).count()
+    return n
+
+
+def _remove_obsolete_demo_accounts():
+    """Alte Demo-Konten löschen, wenn unbenutzt und Ersatz existiert."""
+    canonical = {login for _, login, _, _ in DEMO_ROLLEN_BENUTZER}
+    if not all(
+        Benutzer.query.filter(db.func.lower(Benutzer.benutzername) == n.lower()).first()
+        for n in canonical
+    ):
+        return
+    for login in LEGACY_UNUSED_LOGINS:
+        u = Benutzer.query.filter(
+            db.func.lower(Benutzer.benutzername) == login.lower()
+        ).first()
+        if u and _benutzer_usage_count(u.benutzer_id) == 0:
+            db.session.delete(u)
+    db.session.commit()
+
+
+def _dedupe_standard_benutzer():
+    """Entfernt unbenutzte Namens-Duplikate (z. B. user@12 + demouser@7)."""
+    for _, login, _, _ in DEMO_ROLLEN_BENUTZER:
+        users = Benutzer.query.filter(
+            db.func.lower(Benutzer.benutzername) == login.lower()
+        ).order_by(Benutzer.benutzer_id).all()
+        if len(users) <= 1:
             continue
+        users.sort(key=lambda u: (-_benutzer_usage_count(u.benutzer_id), u.benutzer_id))
+        for u in users[1:]:
+            if _benutzer_usage_count(u.benutzer_id) == 0:
+                db.session.delete(u)
+    db.session.commit()
+
+
+def _rename_legacy_benutzer():
+    for old, (new, anzeige) in LEGACY_BENUTZER_RENAMES.items():
+        u = Benutzer.query.filter(
+            db.func.lower(Benutzer.benutzername) == old.lower()
+        ).first()
+        if not u:
+            continue
+        taken = Benutzer.query.filter(
+            db.func.lower(Benutzer.benutzername) == new.lower(),
+            Benutzer.benutzer_id != u.benutzer_id,
+        ).first()
+        if taken:
+            if _benutzer_usage_count(taken.benutzer_id) == 0:
+                db.session.delete(taken)
+                db.session.flush()
+            else:
+                continue
+        u.benutzername = new
+        u.anzeigename = anzeige
+    db.session.commit()
+
+
+def _add_demo_benutzer(bid: int, login: str, anzeige: str, rolle: str, pw_hash: str):
+    if Benutzer.query.filter(
+        db.func.lower(Benutzer.benutzername) == login.lower()
+    ).first():
+        return
+    if not Benutzer.query.get(bid):
         db.session.add(Benutzer(
             benutzer_id=bid,
             benutzername=login,
@@ -42,6 +123,32 @@ def _seed_benutzer(pw_hash: str):
             passwort_hash=pw_hash,
             rolle=rolle,
         ))
+        return
+    db.session.add(Benutzer(
+        benutzername=login,
+        anzeigename=anzeige,
+        passwort_hash=pw_hash,
+        rolle=rolle,
+    ))
+
+
+def _seed_benutzer(pw_hash: str):
+    for bid, login, anzeige, rolle in DEMO_ROLLEN_BENUTZER:
+        _add_demo_benutzer(bid, login, anzeige, rolle, pw_hash)
+    db.session.commit()
+
+
+def _ensure_demo_rollen_benutzer(pw_hash: str):
+    """Demo-Konten nachziehen bzw. Rolle aktualisieren (bestehende DBs)."""
+    for bid, login, anzeige, rolle in DEMO_ROLLEN_BENUTZER:
+        by_name = Benutzer.query.filter(
+            db.func.lower(Benutzer.benutzername) == login.lower()
+        ).first()
+        if by_name:
+            if normalize_rolle(by_name.rolle) != rolle:
+                by_name.rolle = rolle
+            continue
+        _add_demo_benutzer(bid, login, anzeige, rolle, pw_hash)
     db.session.commit()
 
 
@@ -57,7 +164,7 @@ def _ensure_rolle_column():
             ))
         db.session.remove()
     pw_hash = hash_password(DEMO_PASSWORD)
-    for bid, login, anzeige, rolle in TEST_ROLLEN_BENUTZER:
+    for bid, login, anzeige, rolle in DEMO_ROLLEN_BENUTZER:
         by_name = Benutzer.query.filter(
             db.func.lower(Benutzer.benutzername) == login.lower()
         ).first()
@@ -65,15 +172,7 @@ def _ensure_rolle_column():
             if normalize_rolle(getattr(by_name, 'rolle', None)) != rolle:
                 by_name.rolle = rolle
             continue
-        if Benutzer.query.get(bid):
-            continue
-        db.session.add(Benutzer(
-            benutzer_id=bid,
-            benutzername=login,
-            anzeigename=anzeige,
-            passwort_hash=pw_hash,
-            rolle=rolle,
-        ))
+        _add_demo_benutzer(bid, login, anzeige, rolle, pw_hash)
     for u in Benutzer.query.all():
         if not getattr(u, 'rolle', None):
             u.rolle = ROLLE_USER
@@ -133,8 +232,11 @@ def ensure_benutzer_schema(app):
         # Vor jedem Benutzer-ORM-Zugriff (Model enthält „rolle“)
         _ensure_rolle_column()
 
-        if Benutzer.query.count() == 0:
-            _seed_benutzer(pw_hash)
+        _rename_legacy_benutzer()
+        _dedupe_standard_benutzer()
+        _remove_obsolete_demo_accounts()
+        _seed_benutzer(pw_hash)
+        _ensure_demo_rollen_benutzer(pw_hash)
 
         if 'protokoll' in tables:
             pcols = _column_names(insp, 'protokoll')
@@ -194,3 +296,6 @@ def ensure_benutzer_schema(app):
                         "UPDATE person SET erstellt_am = '2000-01-01T00:00:00' "
                         "WHERE erstellt_am IS NULL"
                     ))
+
+        from zusatz.seed_demo_daten import seed_demo_daten_if_empty
+        seed_demo_daten_if_empty()

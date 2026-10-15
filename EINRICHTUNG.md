@@ -76,12 +76,11 @@ Passwort für alle Demo-Konten: **`Demo2026!`**
 
 | Benutzername | Rolle |
 |--------------|--------|
-| demo | Benutzer |
-| alice | Benutzer |
-| bob | Benutzer |
-| carol | Benutzer |
-| dave | Benutzer |
-| demo_admin | Administrator |
+| user | Benutzer |
+| mitarbeiter | Mitarbeiter |
+| admin | Administrator |
+| developer | Developer |
+| master | Master Developer |
 
 ---
 
